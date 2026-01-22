@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Appsettings personalizate
+appsettings.json
+appsettings.*.json
+
+# Folderul de upload cu media
+wwwroot/uploads/

@@ -1,0 +1,26 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Istoric Operațiuni - Apacks</title>
+    <link rel="stylesheet" href="~/css/istoric.css" />
+</head>
+<body>
+    <h2>📋 Istoric Operațiuni</h2>
+    <a href="/" class="back-btn">← Înapoi la Scanare</a>
+
+    <div id="actions">
+        <button onclick="clearHistory()">🗑️ Șterge istoricul</button>
+        <button onclick="loadLogs()">🔄 Reîncarcă</button>
+    </div>
+
+    <div id="count"></div>
+    <div id="list"></div>
+
+    <script src="~/js/istoric.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Scanare AWB - Apacks</title>
+    <link rel="stylesheet" href="~/css/scanner.css" />
+</head>
+<body>
+    <h2>📦 Scanare AWB</h2>
+    <a href="/Istoric" class="istoric-btn">📋 Vezi Istoric</a>
+    
+    <div class="courier-buttons">
+        <button id="btnCargus" class="courier-btn cargus" onclick="startScanning('CARGUS')">
+            🚚 CARGUS
+        </button>
+        <button id="btnFan" class="courier-btn fan" onclick="startScanning('FAN')">
+            🚚 FAN Courier
+        </button>
+        <button id="btnOlxFan" class="courier-btn olxfan" onclick="startScanning('OLXFAN')">
+            🚚 OLX FAN Courier
+        </button>
+    </div>
+    
+    <div id="activeScanner" class="active-scanner" style="display:none;">
+        <span id="activeCourierLabel"></span>
+        <button onclick="stopScanning()">✕ Oprește</button>
+    </div>
+    
+    <div class="manual-input">
+        <input id="awb" placeholder="Introdu manual AWB..." autocomplete="off">
+        <select id="manualCourier">
+            <option value="CARGUS">CARGUS</option>
+            <option value="FAN">FAN Courier</option>
+            <option value="OLXFAN">OLX FAN</option>
+        </select>
+    </div>
+    
+    <div id="count"></div>
+    <div id="actions">
+        <button onclick="copyAll()">📋 Copiază lista</button>
+        <button onclick="clearAll()">🗑️ Șterge tot</button>
+    </div>
+    
+    <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterBy('')">Toate</button>
+        <button class="filter-btn" onclick="filterBy('CARGUS')">CARGUS</button>
+        <button class="filter-btn" onclick="filterBy('FAN')">FAN</button>
+        <button class="filter-btn" onclick="filterBy('OLXFAN')">OLX FAN</button>
+    </div>
+    
+    <div id="list"></div>
+
+    <!-- Modal pentru media -->
+    <div id="mediaModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>📷 Adaugă Poze/Video</h3>
+            <p id="modalAwbCode"></p>
+            <p class="media-count" id="mediaCount"></p>
+            
+            <div class="media-options">
+                <button onclick="captureMedia('image')">📸 Fă Poză</button>
+                <button onclick="captureMedia('video')">🎥 Fă Video</button>
+                <button onclick="uploadFromGallery()">🖼️ Încarcă din Galerie</button>
+            </div>
+            
+            <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none" onchange="handleFileSelect(event)">
+            <input type="file" id="cameraInput" capture="environment" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+            <input type="file" id="videoInput" capture="environment" accept="video/*" style="display:none" onchange="handleFileSelect(event)">
+            
+            <div id="uploadStatus"></div>
+            <div id="existingMedia"></div>
+        </div>
+    </div>
+
+    <script src="~/js/scanner.js"></script>
+</body>
+</html>

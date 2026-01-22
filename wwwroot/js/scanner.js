@@ -9,6 +9,10 @@ let currentFilter = '';
 // Lista colete de pregătit
 let coleteDePregatit = [];
 
+// Colete pregătite (istoric)
+let coletePregatie = [];
+let selectedDate = '';
+
 function startScanning(courier) {
     isScanning = true;
     currentCourier = courier;
@@ -65,7 +69,7 @@ async function loadAwbs() {
     }
 }
 
-// FUNCȚIE NOUĂ: Încarcă coletele de pregătit
+// Încarcă coletele de pregătit
 async function loadColeteDePregatit() {
     try {
         const res = await fetch('/Depozit/GetColeteDePregatit');
@@ -76,7 +80,7 @@ async function loadColeteDePregatit() {
     }
 }
 
-// FUNCȚIE NOUĂ: Render lista colete de pregătit
+// Render lista colete de pregătit
 function renderColeteDePregatit() {
     const container = document.getElementById('coleteDePregatitList');
     const countEl = document.getElementById('coleteDePregatitCount');
@@ -111,23 +115,156 @@ function renderColeteDePregatit() {
     `).join('');
 }
 
-// FUNCȚIE NOUĂ: Marchează colet ca pregătit
+// Marchează colet ca pregătit (manual)
 async function marcheazaPregatit(id) {
     try {
         const res = await fetch(`/Depozit/MarcheazaPregatit?id=${id}`, { method: 'POST' });
         if (res.ok) {
-            // Animație de succes
             const el = document.getElementById(`colet-${id}`);
             if (el) {
                 el.classList.add('colet-done');
                 setTimeout(() => {
                     loadColeteDePregatit();
+                    loadColetePregatie(); // Refresh istoric
                 }, 300);
             }
         }
     } catch (e) {
         console.error('Eroare:', e);
     }
+}
+
+// NOU: Verifică și marchează automat când se scanează
+async function verificaSiMarcheazaAutomat(code) {
+    try {
+        const res = await fetch('/Depozit/VerificaSiMarcheaza', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        const result = await res.json();
+
+        if (result.found && result.marcat) {
+            // Afișează notificare de succes
+            showAutoMatchNotification(result);
+            // Refresh listele
+            loadColeteDePregatit();
+            loadColetePregatie();
+        }
+
+        return result;
+    } catch (e) {
+        console.error('Eroare la verificare:', e);
+        return { found: false };
+    }
+}
+
+// NOU: Notificare când un AWB a fost găsit și marcat automat
+function showAutoMatchNotification(result) {
+    const notification = document.createElement('div');
+    notification.className = 'auto-match-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">✅</span>
+            <div class="notification-text">
+                <strong>Colet marcat automat!</strong>
+                <div>${result.awbCode} - ${result.destinatar}</div>
+                <small>${result.observatii || ''}</small>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// NOU: Încarcă datele disponibile pentru dropdown
+async function loadDateDisponibile() {
+    try {
+        const res = await fetch('/Depozit/GetDateDisponibile');
+        const dates = await res.json();
+
+        const select = document.getElementById('dateSelect');
+        if (!select) return;
+
+        select.innerHTML = dates.map(d =>
+            `<option value="${d.value}" ${d.isToday ? 'selected' : ''}>${d.label}${d.isToday ? ' (Azi)' : ''}</option>`
+        ).join('');
+
+        // Setează data selectată
+        if (dates.length > 0) {
+            selectedDate = dates.find(d => d.isToday)?.value || dates[0].value;
+        }
+    } catch (e) {
+        console.error('Eroare la încărcarea datelor:', e);
+    }
+}
+
+// NOU: Încarcă coletele pregătite la data selectată
+async function loadColetePregatie(data = null) {
+    try {
+        const targetDate = data || selectedDate || '';
+        const url = targetDate ? `/Depozit/GetColetePregatieLaData?data=${targetDate}` : '/Depozit/GetColetePregatieLaData';
+
+        const res = await fetch(url);
+        const result = await res.json();
+
+        coletePregatie = result.colete || [];
+        renderColetePregatie(result);
+    } catch (e) {
+        console.error('Eroare la încărcarea coletelor pregătite:', e);
+    }
+}
+
+// NOU: Handler pentru schimbarea datei
+function onDateChange(event) {
+    selectedDate = event.target.value;
+    loadColetePregatie(selectedDate);
+}
+
+// NOU: Render coletele pregătite
+function renderColetePregatie(result) {
+    const container = document.getElementById('coletePregateList');
+    const statsEl = document.getElementById('pregateStats');
+
+    if (!container) return;
+
+    // Update stats
+    if (statsEl) {
+        statsEl.innerHTML = `
+            <span class="stat-item">📦 ${result.total} colete</span>
+            <span class="stat-item">💰 ${result.totalRamburs.toFixed(2)} RON</span>
+        `;
+    }
+
+    if (coletePregatie.length === 0) {
+        container.innerHTML = '<div class="empty-pregatie">Niciun colet pregătit în această zi.</div>';
+        return;
+    }
+
+    container.innerHTML = coletePregatie.map(c => `
+        <div class="pregatie-item">
+            <div class="pregatie-header">
+                <span class="pregatie-awb">${c.awbCode}</span>
+                <span class="pregatie-ora">${formatTime(c.pregatitLa)}</span>
+            </div>
+            <div class="pregatie-info">
+                <span class="pregatie-destinatar">👤 ${c.destinatar || '-'}</span>
+                <span class="pregatie-produse">📦 ${c.observatii || '-'}</span>
+            </div>
+            <div class="pregatie-details">
+                <span class="pregatie-ramburs">💰 ${c.rambursRon} RON</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatTime(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(dateString) {
@@ -317,7 +454,12 @@ async function deleteMedia(mediaId) {
     }
 }
 
+// MODIFICAT: Adaugă AWB și verifică automat
 async function addAwb(code, courier) {
+    // Mai întâi verifică și marchează automat dacă există în lista de pregătit
+    await verificaSiMarcheazaAutomat(code);
+
+    // Apoi adaugă în lista de scanate
     const res = await fetch('/Depozit/Add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -370,6 +512,22 @@ function copyAll() {
         .catch(() => alert('Eroare la copiere'));
 }
 
+// Toggle secțiunea de istoric
+function toggleIstoricSection() {
+    const section = document.getElementById('istoricSection');
+    const btn = document.getElementById('toggleIstoricBtn');
+
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        btn.textContent = '▼ Ascunde istoric';
+        loadDateDisponibile();
+        loadColetePregatie();
+    } else {
+        section.style.display = 'none';
+        btn.textContent = '▶ Vezi coletele pregătite';
+    }
+}
+
 document.getElementById('awb').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const val = e.target.value.trim();
@@ -407,6 +565,8 @@ window.onclick = function (event) {
 // Inițializare
 loadAwbs();
 loadColeteDePregatit();
+loadDateDisponibile();
+loadColetePregatie();
 
 // Refresh periodic
 setInterval(loadAwbs, 3000);

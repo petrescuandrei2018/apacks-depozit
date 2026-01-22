@@ -40,7 +40,7 @@ public class DepozitController : Controller
         return Json(awbs);
     }
 
-    // ENDPOINT NOU: Returnează coletele PENDING care trebuie pregătite
+    // Returnează coletele PENDING care trebuie pregătite
     [HttpGet]
     public async Task<IActionResult> GetColeteDePregatit()
     {
@@ -64,7 +64,7 @@ public class DepozitController : Controller
         return Json(colete);
     }
 
-    // ENDPOINT NOU: Marchează un colet ca PREGATIT (livrat)
+    // Marchează un colet ca PREGATIT (livrat) - manual
     [HttpPost]
     public async Task<IActionResult> MarcheazaPregatit(int id)
     {
@@ -85,13 +85,129 @@ public class DepozitController : Controller
         return Json(new { success = true });
     }
 
+    // NOU: Verifică dacă un AWB există în colete PENDING și îl marchează automat
+    [HttpPost]
+    public async Task<IActionResult> VerificaSiMarcheaza([FromBody] AwbRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Code))
+            return Json(new { found = false });
+
+        // Caută coletul în lista de pregătit (PENDING)
+        var colet = await _db.AwbColete.FirstOrDefaultAsync(c =>
+            c.AwbCode == request.Code && c.Status == "PENDING");
+
+        if (colet != null)
+        {
+            colet.Status = "LIVRAT";
+            colet.UpdatedAt = DateTime.Now;
+
+            _db.AuditLogs.Add(new AuditLog
+            {
+                Action = "PREGATIT_AUTO",
+                EntityType = "COLET",
+                EntityInfo = $"AWB: {colet.AwbCode}, Destinatar: {colet.Destinatar} (scanat automat)"
+            });
+
+            await _db.SaveChangesAsync();
+
+            return Json(new
+            {
+                found = true,
+                marcat = true,
+                awbCode = colet.AwbCode,
+                destinatar = colet.Destinatar,
+                observatii = colet.Observatii
+            });
+        }
+
+        return Json(new { found = false, marcat = false });
+    }
+
+    // NOU: Returnează coletele pregătite la o anumită dată
+    [HttpGet]
+    public async Task<IActionResult> GetColetePregatieLaData(string? data = null)
+    {
+        DateTime targetDate;
+
+        if (string.IsNullOrEmpty(data))
+        {
+            targetDate = DateTime.Today;
+        }
+        else
+        {
+            if (!DateTime.TryParse(data, out targetDate))
+                targetDate = DateTime.Today;
+        }
+
+        var startOfDay = targetDate.Date;
+        var endOfDay = targetDate.Date.AddDays(1);
+
+        var colete = await _db.AwbColete
+            .Where(c => c.Status == "LIVRAT" && c.UpdatedAt >= startOfDay && c.UpdatedAt < endOfDay)
+            .OrderByDescending(c => c.UpdatedAt)
+            .Select(c => new
+            {
+                c.Id,
+                c.AwbCode,
+                c.Destinatar,
+                c.Observatii,
+                c.RambursRon,
+                c.Telefon,
+                c.GreutateKg,
+                c.DataAwb,
+                PregatitLa = c.UpdatedAt
+            })
+            .ToListAsync();
+
+        return Json(new
+        {
+            data = targetDate.ToString("yyyy-MM-dd"),
+            dataFormatata = targetDate.ToString("dd.MM.yyyy"),
+            total = colete.Count,
+            totalRamburs = colete.Sum(c => c.RambursRon),
+            colete = colete
+        });
+    }
+
+    // NOU: Returnează datele disponibile cu colete pregătite (pentru dropdown)
+    [HttpGet]
+    public async Task<IActionResult> GetDateDisponibile()
+    {
+        var dates = await _db.AwbColete
+            .Where(c => c.Status == "LIVRAT")
+            .Select(c => c.UpdatedAt.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .Take(30) // Ultimele 30 de zile cu activitate
+            .ToListAsync();
+
+        var result = dates.Select(d => new
+        {
+            value = d.ToString("yyyy-MM-dd"),
+            label = d.ToString("dd.MM.yyyy"),
+            isToday = d.Date == DateTime.Today
+        }).ToList();
+
+        // Adaugă data de azi dacă nu există
+        if (!result.Any(r => r.isToday))
+        {
+            result.Insert(0, new
+            {
+                value = DateTime.Today.ToString("yyyy-MM-dd"),
+                label = DateTime.Today.ToString("dd.MM.yyyy") + " (Azi)",
+                isToday = true
+            });
+        }
+
+        return Json(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AwbRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Code))
             return BadRequest();
 
-        // Verifică dacă există deja
         var existing = await _db.Awbs.FirstOrDefaultAsync(a => a.Code == request.Code);
         if (existing == null)
         {
@@ -173,7 +289,7 @@ public class DepozitController : Controller
     }
 
     [HttpPost]
-    [RequestSizeLimit(100_000_000)] // 100MB
+    [RequestSizeLimit(100_000_000)]
     public async Task<IActionResult> UploadMedia(int awbId, List<IFormFile> files)
     {
         try
@@ -185,7 +301,6 @@ public class DepozitController : Controller
             if (awb.Media.Count + files.Count > 10)
                 return BadRequest($"Maxim 10 fișiere per AWB. Ai deja {awb.Media.Count}.");
 
-            // Creează folderul uploads dacă nu există
             var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads");
             if (!Directory.Exists(uploadsRoot))
                 Directory.CreateDirectory(uploadsRoot);

@@ -11,7 +11,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Adaugă asta pentru a vedea erorile
 if (!app.Environment.IsProduction())
 {
     app.UseDeveloperExceptionPage();
@@ -24,6 +23,13 @@ else
 app.UseStaticFiles();
 app.UseRouting();
 
+// Rută pentru /admin -> merge la AwbColet
+app.MapControllerRoute(
+    name: "admin",
+    pattern: "admin/{action=Index}/{id?}",
+    defaults: new { controller = "AwbColet" });
+
+// Ruta default
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Depozit}/{action=Index}/{id?}");

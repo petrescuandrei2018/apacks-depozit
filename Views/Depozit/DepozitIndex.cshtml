@@ -1,84 +1,525 @@
-﻿@{
+@{
     Layout = null;
 }
 <!DOCTYPE html>
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Scanare AWB - Apacks</title>
-    <link rel="stylesheet" href="~/css/scanner.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>📦 Depozit Scanner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 15px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header nav { margin-top: 10px; }
+        .nav-link {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover { background: rgba(0, 212, 255, 0.2); }
+
+        /* SECȚIUNEA COLETE DE PREGĂTIT */
+        .colete-section {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid rgba(255, 193, 7, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .colete-section h2 {
+            color: #ffc107;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .colete-count {
+            background: #ffc107;
+            color: #1a1a2e;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        #coleteDePregatitList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .colet-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+            transition: all 0.3s ease;
+        }
+        .colet-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .colet-item.colet-done {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        .colet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .colet-awb {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #00ff88;
+            font-size: 1.1rem;
+        }
+        .colet-data {
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+        .colet-info { margin-bottom: 10px; }
+        .colet-destinatar {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .colet-produse {
+            color: #00d4ff;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 6px;
+        }
+        .colet-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #8892b0;
+        }
+        .colet-ramburs { color: #ffd700; font-weight: 600; }
+        .colet-actions { text-align: right; }
+        .btn-pregatit {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-pregatit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        .empty-colete {
+            text-align: center;
+            padding: 30px;
+            color: #00ff88;
+            font-size: 1.1rem;
+        }
+
+        /* SECȚIUNEA SCANARE */
+        .scan-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .scan-section h2 {
+            color: #00d4ff;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .courier-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .courier-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: transparent;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .courier-btn:hover { border-color: #00d4ff; }
+        .courier-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .active-scanner {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .active-scanner .pulse {
+            width: 12px;
+            height: 12px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1.1rem;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        .input-group select {
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .filter-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+        }
+        .stats span { color: #8892b0; }
+        .action-btns { display: flex; gap: 10px; }
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-copy { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .btn-clear { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
+
+        #list { display: flex; flex-direction: column; gap: 10px; }
+        .awb {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid #00d4ff;
+        }
+        .awb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .awb-info { flex: 1; }
+        .awb-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #00ff88;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .courier-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .courier-badge.CARGUS { background: #ff6b35; color: #fff; }
+        .courier-badge.FAN { background: #0066cc; color: #fff; }
+        .courier-badge.OLXFAN { background: #002f34; color: #fff; }
+        .media-badge {
+            font-size: 0.75rem;
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .awb-date { color: #666; font-size: 0.8rem; margin-top: 5px; }
+        .awb-actions { display: flex; gap: 8px; }
+        .awb-actions button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-media { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .btn-delete { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
+
+        .awb-media-preview {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .awb-media-preview img, .awb-media-preview video {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            background: #1a1a2e;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 { color: #00d4ff; }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .media-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .media-actions button {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: transparent;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .media-actions button:hover { border-color: #00d4ff; }
+        #uploadStatus {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        #uploadStatus.success { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+        #uploadStatus.error { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
+        #uploadStatus.loading { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        #existingMedia { margin-top: 15px; }
+        .existing-media-item {
+            display: inline-block;
+            position: relative;
+            margin: 5px;
+        }
+        .existing-media-item img, .existing-media-item video {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .delete-media {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 24px;
+            height: 24px;
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .hidden-inputs { display: none; }
+    </style>
 </head>
 <body>
-    <h2>📦 Scanare AWB</h2>
-    <a href="/Istoric" class="istoric-btn">📋 Vezi Istoric</a>
-    
-    <a href="/AwbColet" class="istoric-btn">📦 Colete AWB</a>
+    <div class="container">
+        <header>
+            <h1>📦 Depozit Scanner</h1>
+            <nav>
+                <a href="/AwbColet" class="nav-link">📋 Admin Colete</a>
+                <a href="/Istoric" class="nav-link">📜 Istoric</a>
+            </nav>
+        </header>
 
-    <div class="courier-buttons">
-        <button id="btnCargus" class="courier-btn cargus" onclick="startScanning('CARGUS')">
-            🚚 CARGUS
-        </button>
-        <button id="btnFan" class="courier-btn fan" onclick="startScanning('FAN')">
-            🚚 FAN Courier
-        </button>
-        <button id="btnOlxFan" class="courier-btn olxfan" onclick="startScanning('OLXFAN')">
-            🚚 OLX FAN Courier
-        </button>
-    </div>
-    
-    <div id="activeScanner" class="active-scanner" style="display:none;">
-        <span id="activeCourierLabel"></span>
-        <button onclick="stopScanning()">✕ Oprește</button>
-    </div>
-    
-    <div class="manual-input">
-        <input id="awb" placeholder="Introdu manual AWB..." autocomplete="off">
-        <select id="manualCourier">
-            <option value="CARGUS">CARGUS</option>
-            <option value="FAN">FAN Courier</option>
-            <option value="OLXFAN">OLX FAN</option>
-        </select>
-    </div>
-    
-    <div id="count"></div>
-    <div id="actions">
-        <button onclick="copyAll()">📋 Copiază lista</button>
-        <button onclick="clearAll()">🗑️ Șterge tot</button>
-    </div>
-    
-    <div class="filter-buttons">
-        <button class="filter-btn active" onclick="filterBy('')">Toate</button>
-        <button class="filter-btn" onclick="filterBy('CARGUS')">CARGUS</button>
-        <button class="filter-btn" onclick="filterBy('FAN')">FAN</button>
-        <button class="filter-btn" onclick="filterBy('OLXFAN')">OLX FAN</button>
-    </div>
-    
-    <div id="list"></div>
+        <!-- SECȚIUNEA COLETE DE PREGĂTIT -->
+        <section class="colete-section">
+            <h2>
+                📋 Colete de Pregătit
+                <span class="colete-count" id="coleteDePregatitCount">0</span>
+            </h2>
+            <div id="coleteDePregatitList">
+                <div class="empty-colete">Se încarcă...</div>
+            </div>
+        </section>
 
-    <!-- Modal pentru media -->
+        <!-- SECȚIUNEA SCANARE -->
+        <section class="scan-section">
+            <h2>📷 Scanare AWB</h2>
+            
+            <div class="courier-buttons">
+                <button class="courier-btn" id="btnCargus" onclick="startScanning('CARGUS')">🚚 CARGUS</button>
+                <button class="courier-btn" id="btnFan" onclick="startScanning('FAN')">🚚 FAN</button>
+                <button class="courier-btn" id="btnOlxFan" onclick="startScanning('OLXFAN')">🚚 OLX FAN</button>
+            </div>
+
+            <div class="active-scanner" id="activeScanner">
+                <div class="pulse"></div>
+                <span id="activeCourierLabel">Scanare activă</span>
+                <button onclick="stopScanning()" style="margin-left:auto; padding:5px 10px; background:rgba(255,68,68,0.3); border:none; border-radius:5px; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="awb" placeholder="Scanează sau introdu AWB..." autocomplete="off">
+                <select id="manualCourier">
+                    <option value="CARGUS">CARGUS</option>
+                    <option value="FAN">FAN</option>
+                    <option value="OLXFAN">OLX FAN</option>
+                </select>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterBy('')">Toate</button>
+                <button class="filter-btn" onclick="filterBy('CARGUS')">CARGUS</button>
+                <button class="filter-btn" onclick="filterBy('FAN')">FAN</button>
+                <button class="filter-btn" onclick="filterBy('OLXFAN')">OLX FAN</button>
+            </div>
+
+            <div class="stats">
+                <span id="count">Total: 0 AWB-uri</span>
+                <div class="action-btns">
+                    <button class="btn-action btn-copy" onclick="copyAll()">📋 Copiază</button>
+                    <button class="btn-action btn-clear" onclick="clearAll()">🗑️ Șterge tot</button>
+                </div>
+            </div>
+
+            <div id="list"></div>
+        </section>
+    </div>
+
+    <!-- Modal Media -->
     <div id="mediaModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3>📷 Adaugă Poze/Video</h3>
-            <p id="modalAwbCode"></p>
-            <p class="media-count" id="mediaCount"></p>
-            
-            <div class="media-options">
-                <button onclick="captureMedia('image')">📸 Fă Poză</button>
-                <button onclick="captureMedia('video')">🎥 Fă Video</button>
-                <button onclick="uploadFromGallery()">🖼️ Încarcă din Galerie</button>
+            <div class="modal-header">
+                <h3 id="modalAwbCode">AWB</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
             </div>
+            <p id="mediaCount" style="color:#666; margin-bottom:15px;"></p>
             
-            <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none" onchange="handleFileSelect(event)">
-            <input type="file" id="cameraInput" capture="environment" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
-            <input type="file" id="videoInput" capture="environment" accept="video/*" style="display:none" onchange="handleFileSelect(event)">
+            <div class="media-actions">
+                <button onclick="captureMedia('image')">📷 Poză</button>
+                <button onclick="captureMedia('video')">🎥 Video</button>
+                <button onclick="uploadFromGallery()">📁 Galerie</button>
+            </div>
             
             <div id="uploadStatus"></div>
             <div id="existingMedia"></div>
         </div>
     </div>
 
-    <script src="~/js/scanner.js"></script>
+    <div class="hidden-inputs">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+        <input type="file" id="videoInput" accept="video/*" capture="environment" onchange="handleFileSelect(event)">
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple onchange="handleFileSelect(event)">
+    </div>
+
+    <script src="/js/scanner.js"></script>
 </body>
 </html>

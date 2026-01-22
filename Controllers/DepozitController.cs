@@ -40,6 +40,51 @@ public class DepozitController : Controller
         return Json(awbs);
     }
 
+    // ENDPOINT NOU: Returnează coletele PENDING care trebuie pregătite
+    [HttpGet]
+    public async Task<IActionResult> GetColeteDePregatit()
+    {
+        var colete = await _db.AwbColete
+            .Where(c => c.Status == "PENDING")
+            .OrderBy(c => c.DataAwb)
+            .ThenBy(c => c.CreatedAt)
+            .Select(c => new
+            {
+                c.Id,
+                c.AwbCode,
+                c.Destinatar,
+                c.Observatii,
+                c.RambursRon,
+                c.Telefon,
+                c.GreutateKg,
+                c.DataAwb,
+                c.Status
+            })
+            .ToListAsync();
+        return Json(colete);
+    }
+
+    // ENDPOINT NOU: Marchează un colet ca PREGATIT (livrat)
+    [HttpPost]
+    public async Task<IActionResult> MarcheazaPregatit(int id)
+    {
+        var colet = await _db.AwbColete.FindAsync(id);
+        if (colet == null) return NotFound();
+
+        colet.Status = "LIVRAT";
+        colet.UpdatedAt = DateTime.Now;
+
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Action = "PREGATIT",
+            EntityType = "COLET",
+            EntityInfo = $"AWB: {colet.AwbCode}, Destinatar: {colet.Destinatar}"
+        });
+
+        await _db.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AwbRequest request)
     {

@@ -6,18 +6,18 @@ let currentCourier = null;
 let currentAwbId = null;
 let currentFilter = '';
 
+// Lista colete de pregătit
+let coleteDePregatit = [];
+
 function startScanning(courier) {
     isScanning = true;
     currentCourier = courier;
 
-    // Dezactivează toate butoanele
     document.querySelectorAll('.courier-btn').forEach(btn => btn.classList.remove('active'));
 
-    // Activează butonul curent
     const btnId = courier === 'CARGUS' ? 'btnCargus' : courier === 'FAN' ? 'btnFan' : 'btnOlxFan';
     document.getElementById(btnId).classList.add('active');
 
-    // Afișează indicatorul
     const label = courier === 'CARGUS' ? '🚚 CARGUS' : courier === 'FAN' ? '🚚 FAN Courier' : '🚚 OLX FAN';
     document.getElementById('activeCourierLabel').textContent = `Scanare activă: ${label}`;
     document.getElementById('activeScanner').style.display = 'flex';
@@ -50,7 +50,6 @@ async function loadAwbs() {
         const res = await fetch('/Depozit/GetAll');
         allAwbs = await res.json();
 
-        // Aplică filtrul curent
         if (currentFilter === '') {
             awbs = [...allAwbs];
         } else {
@@ -63,6 +62,71 @@ async function loadAwbs() {
         }
     } catch (e) {
         console.error('Eroare la încărcare:', e);
+    }
+}
+
+// FUNCȚIE NOUĂ: Încarcă coletele de pregătit
+async function loadColeteDePregatit() {
+    try {
+        const res = await fetch('/Depozit/GetColeteDePregatit');
+        coleteDePregatit = await res.json();
+        renderColeteDePregatit();
+    } catch (e) {
+        console.error('Eroare la încărcarea coletelor:', e);
+    }
+}
+
+// FUNCȚIE NOUĂ: Render lista colete de pregătit
+function renderColeteDePregatit() {
+    const container = document.getElementById('coleteDePregatitList');
+    const countEl = document.getElementById('coleteDePregatitCount');
+
+    if (!container) return;
+
+    countEl.textContent = coleteDePregatit.length;
+
+    if (coleteDePregatit.length === 0) {
+        container.innerHTML = '<div class="empty-colete">✅ Toate coletele sunt pregătite!</div>';
+        return;
+    }
+
+    container.innerHTML = coleteDePregatit.map(c => `
+        <div class="colet-item" id="colet-${c.id}">
+            <div class="colet-header">
+                <span class="colet-awb">${c.awbCode}</span>
+                <span class="colet-data">${c.dataAwb || '-'}</span>
+            </div>
+            <div class="colet-info">
+                <div class="colet-destinatar">👤 ${c.destinatar || '-'}</div>
+                <div class="colet-produse">📦 ${c.observatii || '-'}</div>
+                <div class="colet-details">
+                    <span class="colet-ramburs">💰 ${c.rambursRon} RON</span>
+                    <span class="colet-greutate">⚖️ ${c.greutateKg} kg</span>
+                </div>
+            </div>
+            <div class="colet-actions">
+                <button class="btn-pregatit" onclick="marcheazaPregatit(${c.id})">✓ Pregătit</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// FUNCȚIE NOUĂ: Marchează colet ca pregătit
+async function marcheazaPregatit(id) {
+    try {
+        const res = await fetch(`/Depozit/MarcheazaPregatit?id=${id}`, { method: 'POST' });
+        if (res.ok) {
+            // Animație de succes
+            const el = document.getElementById(`colet-${id}`);
+            if (el) {
+                el.classList.add('colet-done');
+                setTimeout(() => {
+                    loadColeteDePregatit();
+                }, 300);
+            }
+        }
+    } catch (e) {
+        console.error('Eroare:', e);
     }
 }
 
@@ -311,14 +375,12 @@ document.getElementById('awb').addEventListener('keypress', (e) => {
         const val = e.target.value.trim();
         if (!val) return;
 
-        // Verifică dacă există deja în allAwbs (nu în awbs filtrat)
         if (allAwbs.some(a => a.code === val)) {
             alert('Acest AWB există deja!');
             e.target.value = '';
             return;
         }
 
-        // Dacă scanăm, folosim curierul activ, altfel cel din dropdown
         const courier = isScanning && currentCourier ? currentCourier : document.getElementById('manualCourier').value;
 
         addAwb(val, courier);
@@ -342,5 +404,10 @@ window.onclick = function (event) {
     }
 }
 
+// Inițializare
 loadAwbs();
+loadColeteDePregatit();
+
+// Refresh periodic
 setInterval(loadAwbs, 3000);
+setInterval(loadColeteDePregatit, 5000);

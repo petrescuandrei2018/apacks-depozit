@@ -13,6 +13,15 @@ let coleteDePregatit = [];
 let coletePregatie = [];
 let selectedDate = '';
 
+// FUNCȚIE CENTRALIZATĂ: Refresh toate cele 3 secțiuni
+async function refreshAll() {
+    await Promise.all([
+        loadAwbs(),
+        loadColeteDePregatit(),
+        loadColetePregatie(selectedDate)
+    ]);
+}
+
 function startScanning(courier) {
     isScanning = true;
     currentCourier = courier;
@@ -123,11 +132,8 @@ async function marcheazaPregatit(id) {
             const el = document.getElementById(`colet-${id}`);
             if (el) {
                 el.classList.add('colet-done');
-                setTimeout(() => {
-                    loadColeteDePregatit();
-                    loadColetePregatie(); // Refresh istoric
-                }, 300);
             }
+            setTimeout(() => refreshAll(), 300);
         }
     } catch (e) {
         console.error('Eroare:', e);
@@ -147,9 +153,8 @@ async function verificaSiMarcheazaAutomat(code) {
         if (result.found && result.marcat) {
             // Afișează notificare de succes
             showAutoMatchNotification(result);
-            // Refresh listele
-            loadColeteDePregatit();
-            loadColetePregatie();
+            // Refresh toate listele
+            refreshAll();
         }
 
         return result;
@@ -246,7 +251,7 @@ function renderColetePregatie(result) {
     }
 
     container.innerHTML = coletePregatie.map(c => `
-        <div class="pregatie-item">
+        <div class="pregatie-item" id="pregatie-${c.id}">
             <div class="pregatie-header">
                 <span class="pregatie-awb">${c.awbCode}</span>
                 <span class="pregatie-ora">${formatTime(c.pregatitLa)}</span>
@@ -255,8 +260,9 @@ function renderColetePregatie(result) {
                 <span class="pregatie-destinatar">👤 ${c.destinatar || '-'}</span>
                 <span class="pregatie-produse">📦 ${c.observatii || '-'}</span>
             </div>
-            <div class="pregatie-details">
+            <div class="pregatie-footer">
                 <span class="pregatie-ramburs">💰 ${c.rambursRon} RON</span>
+                <button class="btn-anuleaza" onclick="anuleazaPregatire(${c.id}, '${c.awbCode}')">↩️ Anulează</button>
             </div>
         </div>
     `).join('');
@@ -474,10 +480,13 @@ async function addAwb(code, courier) {
         awbs = allAwbs.filter(a => a.courier === currentFilter);
     }
     render();
+
+    // Refresh toate listele pentru sincronizare
+    refreshAll();
 }
 
 async function remove(code) {
-    if (!confirm(`Ștergi AWB ${code} și toate pozele asociate?`)) return;
+    if (!confirm(`Ștergi AWB ${code} și toate pozele asociate?\nDacă era pregătit, va reveni în lista de pregătit.`)) return;
 
     const res = await fetch('/Depozit/Remove', {
         method: 'POST',
@@ -493,6 +502,9 @@ async function remove(code) {
         awbs = allAwbs.filter(a => a.courier === currentFilter);
     }
     render();
+
+    // Refresh toate listele
+    refreshAll();
 }
 
 async function clearAll() {
@@ -525,6 +537,29 @@ function toggleIstoricSection() {
     } else {
         section.style.display = 'none';
         btn.textContent = '▶ Vezi coletele pregătite';
+    }
+}
+
+// NOU: Anulează pregătirea și revine la PENDING
+async function anuleazaPregatire(id, awbCode) {
+    if (!confirm(`Anulezi pregătirea coletului ${awbCode}?\nVa reveni în lista de pregătit.`)) return;
+
+    try {
+        const res = await fetch(`/Depozit/RevineLaPending?id=${id}`, { method: 'POST' });
+        if (res.ok) {
+            // Animație
+            const el = document.getElementById(`pregatie-${id}`);
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(-50px)';
+            }
+
+            // Refresh toate listele
+            setTimeout(() => refreshAll(), 300);
+        }
+    } catch (e) {
+        console.error('Eroare:', e);
+        alert('Eroare la anulare');
     }
 }
 
@@ -568,6 +603,5 @@ loadColeteDePregatit();
 loadDateDisponibile();
 loadColetePregatie();
 
-// Refresh periodic
-setInterval(loadAwbs, 3000);
-setInterval(loadColeteDePregatit, 5000);
+// Refresh periodic - toate cele 3 secțiuni la fiecare 5 secunde
+setInterval(refreshAll, 5000);

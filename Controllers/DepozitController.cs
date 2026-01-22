@@ -202,6 +202,43 @@ public class DepozitController : Controller
         return Json(result);
     }
 
+    // NOU: Revine un colet la PENDING (anulare pregătire)
+    [HttpPost]
+    public async Task<IActionResult> RevineLaPending(int id)
+    {
+        var colet = await _db.AwbColete.FindAsync(id);
+        if (colet == null) return NotFound();
+
+        colet.Status = "PENDING";
+        colet.UpdatedAt = DateTime.Now;
+
+        // Șterge și din lista de AWB-uri scanate dacă există
+        var awbScanat = await _db.Awbs
+            .Include(a => a.Media)
+            .FirstOrDefaultAsync(a => a.Code == colet.AwbCode);
+
+        if (awbScanat != null)
+        {
+            foreach (var media in awbScanat.Media)
+            {
+                var filePath = Path.Combine(_env.WebRootPath, media.FilePath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
+            }
+            _db.Awbs.Remove(awbScanat);
+        }
+
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Action = "REVENIT_PENDING",
+            EntityType = "COLET",
+            EntityInfo = $"AWB: {colet.AwbCode}, Destinatar: {colet.Destinatar} (anulat manual)"
+        });
+
+        await _db.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AwbRequest request)
     {
@@ -241,6 +278,21 @@ public class DepozitController : Controller
 
         if (awb != null)
         {
+            // Verifică dacă există un colet LIVRAT cu acest AWB și îl readuce la PENDING
+            var colet = await _db.AwbColete.FirstOrDefaultAsync(c => c.AwbCode == request.Code && c.Status == "LIVRAT");
+            if (colet != null)
+            {
+                colet.Status = "PENDING";
+                colet.UpdatedAt = DateTime.Now;
+
+                _db.AuditLogs.Add(new AuditLog
+                {
+                    Action = "REVENIT_PENDING",
+                    EntityType = "COLET",
+                    EntityInfo = $"AWB: {colet.AwbCode}, Destinatar: {colet.Destinatar} (anulat din scanare)"
+                });
+            }
+
             foreach (var media in awb.Media)
             {
                 var filePath = Path.Combine(_env.WebRootPath, media.FilePath.TrimStart('/'));

@@ -214,16 +214,29 @@ public class AwbColetController : Controller
             colet.Destinatar = nume;
         }
 
-        // OBSERVAȚII / PRODUSE - extrage conținutul coletului
         var obsMatch = Regex.Match(textExtras,
-            @"Observatii\s*:\s*(.*?)(?=\s*(?:Nume\s*curier|Motiv|$))",
+            @"Observatii\s*:\s*(.*?)(?=\s*(?:Platitor|Nume\s*curier|Motiv|Referinta|Calitate|\d+\s+\d+\s+\d+\s+\d+|$))",
             RegexOptions.IgnoreCase);
         if (obsMatch.Success)
         {
             var obs = obsMatch.Groups[1].Value.Trim();
-            // Curăță textul - elimină resturi nedorite
-            obs = Regex.Replace(obs, @"\s+", " ");
-            colet.Observatii = obs;
+            // Verifică dacă e valid (conține kg sau produse)
+            if (!string.IsNullOrEmpty(obs) && obs.Length > 3)
+            {
+                colet.Observatii = obs;
+            }
+        }
+
+        // Fallback: extrage din numele fișierului (ex: Tiganus_Marius_1177276472_10kg_COCOS_si_10kg_carbuni_ROSII.pdf)
+        if (string.IsNullOrEmpty(colet.Observatii))
+        {
+            var filename = Path.GetFileNameWithoutExtension(originalFileName);
+            // Caută pattern: după AWB (117xxxxxxx) vine descrierea produselor
+            var fileObsMatch = Regex.Match(filename, @"117\d{7}_(.+)$");
+            if (fileObsMatch.Success)
+            {
+                colet.Observatii = fileObsMatch.Groups[1].Value.Replace('_', ' ').Trim();
+            }
         }
 
         // EXPEDITOR - extrage numele firmei

@@ -1,4 +1,4 @@
-﻿let awbs = [];
+let awbs = [];
 let allAwbs = [];
 let lastCount = 0;
 let isScanning = false;
@@ -12,6 +12,9 @@ let coleteDePregatit = [];
 // Colete pregătite (istoric)
 let coletePregatie = [];
 let selectedDate = '';
+
+// Istoric print-uri (localStorage)
+let printHistory = JSON.parse(localStorage.getItem('printHistory') || '{}');
 
 // FUNCȚIE CENTRALIZATĂ: Refresh toate cele 3 secțiuni
 async function refreshAll() {
@@ -118,10 +121,63 @@ function renderColeteDePregatit() {
                 </div>
             </div>
             <div class="colet-actions">
+                ${c.caleFisier ? `<button class="btn-print" onclick="printAwb('${c.awbCode}', '${c.caleFisier}')" title="Printează AWB">🖨️</button>` : ''}
                 <button class="btn-pregatit" onclick="marcheazaPregatit(${c.id})">✓ Pregătit</button>
             </div>
         </div>
     `).join('');
+}
+
+// Funcție pentru print AWB cu avertizare la duplicate
+function printAwb(awbCode, caleFisier) {
+    const now = new Date();
+    const key = `print_${awbCode}`;
+
+    if (printHistory[key]) {
+        const lastPrint = new Date(printHistory[key]);
+        const formatted = lastPrint.toLocaleString('ro-RO', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        if (!confirm(`⚠️ Ați mai apăsat pe PRINT pentru acest AWB!\n\nUltima dată: ${formatted}\n\nContinuați cu printarea?`)) {
+            return;
+        }
+    }
+
+    // Salvează în istoric
+    printHistory[key] = now.toISOString();
+    localStorage.setItem('printHistory', JSON.stringify(printHistory));
+
+    // Deschide PDF-ul pentru print
+    const printWindow = window.open(caleFisier, '_blank');
+    if (printWindow) {
+        printWindow.onload = function () {
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        };
+    }
+}
+
+// Funcție pentru toggle fullscreen pe secțiunea colete
+function toggleFullscreen() {
+    const section = document.querySelector('.colete-section');
+    const btn = document.getElementById('btnFullscreen');
+
+    section.classList.toggle('fullscreen-mode');
+    document.body.classList.toggle('fullscreen-active');
+
+    if (section.classList.contains('fullscreen-mode')) {
+        btn.innerHTML = '✕ Închide';
+        btn.title = 'Ieși din fullscreen';
+    } else {
+        btn.innerHTML = '⛶ Fullscreen';
+        btn.title = 'Deschide în fullscreen';
+    }
 }
 
 // Marchează colet ca pregătit (manual)
@@ -219,6 +275,16 @@ async function loadColetePregatie(data = null) {
 
         coletePregatie = result.colete || [];
         renderColetePregatie(result);
+
+        // Auto-deschide secțiunea dacă există cel puțin 1 colet pregătit
+        if (coletePregatie.length > 0) {
+            const section = document.getElementById('istoricSection');
+            const btn = document.getElementById('toggleIstoricBtn');
+            if (section && section.style.display === 'none') {
+                section.style.display = 'block';
+                btn.textContent = '▼ Ascunde istoric';
+            }
+        }
     } catch (e) {
         console.error('Eroare la încărcarea coletelor pregătite:', e);
     }
@@ -460,8 +526,14 @@ async function deleteMedia(mediaId) {
     }
 }
 
-// MODIFICAT: Adaugă AWB și verifică automat
+// MODIFICAT: Adaugă AWB cu verificare duplicate
 async function addAwb(code, courier) {
+    // Verifică local întâi pentru răspuns rapid
+    if (allAwbs.some(a => a.code === code)) {
+        showDuplicateWarning(code);
+        return;
+    }
+
     // Mai întâi verifică și marchează automat dacă există în lista de pregătit
     await verificaSiMarcheazaAutomat(code);
 
@@ -471,7 +543,16 @@ async function addAwb(code, courier) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, courier })
     });
-    allAwbs = await res.json();
+
+    const result = await res.json();
+
+    // Verifică dacă serverul a returnat eroare de duplicat
+    if (result.error) {
+        showDuplicateWarning(code);
+        return;
+    }
+
+    allAwbs = result;
     lastCount = allAwbs.length;
 
     if (currentFilter === '') {
@@ -483,6 +564,27 @@ async function addAwb(code, courier) {
 
     // Refresh toate listele pentru sincronizare
     refreshAll();
+}
+
+// Funcție pentru afișare warning duplicate
+function showDuplicateWarning(code) {
+    const notification = document.createElement('div');
+    notification.className = 'duplicate-warning';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">⚠️</span>
+            <div class="notification-text">
+                <strong>AWB duplicat!</strong>
+                <div>${code} există deja în sistem</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 async function remove(code) {
@@ -563,13 +665,15 @@ async function anuleazaPregatire(id, awbCode) {
     }
 }
 
+// Event listener pentru input AWB
 document.getElementById('awb').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const val = e.target.value.trim();
         if (!val) return;
 
+        // Verificare locală pentru răspuns instant
         if (allAwbs.some(a => a.code === val)) {
-            alert('Acest AWB există deja!');
+            showDuplicateWarning(val);
             e.target.value = '';
             return;
         }
@@ -597,11 +701,25 @@ window.onclick = function (event) {
     }
 }
 
+// Escape key pentru ieșire din fullscreen
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const section = document.querySelector('.colete-section');
+        if (section && section.classList.contains('fullscreen-mode')) {
+            toggleFullscreen();
+        }
+    }
+});
+
 // Inițializare
-loadAwbs();
-loadColeteDePregatit();
-loadDateDisponibile();
-loadColetePregatie();
+async function init() {
+    await loadAwbs();
+    await loadColeteDePregatit();
+    await loadDateDisponibile();
+    await loadColetePregatie(); // Va deschide automat secțiunea dacă există colete
+}
+
+init();
 
 // Refresh periodic - toate cele 3 secțiuni la fiecare 5 secunde
 setInterval(refreshAll, 5000);

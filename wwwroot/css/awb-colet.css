@@ -26,23 +26,23 @@ header {
     margin-bottom: 25px;
 }
 
-header h1 {
-    font-size: 2rem;
-    background: linear-gradient(135deg, #00d4ff, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 5px;
-}
+    header h1 {
+        font-size: 2rem;
+        background: linear-gradient(135deg, #00d4ff, #00ff88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 5px;
+    }
 
-header p {
-    color: #8892b0;
-    font-size: 0.9rem;
-}
+    header p {
+        color: #8892b0;
+        font-size: 0.9rem;
+    }
 
-header nav {
-    margin-top: 15px;
-}
+    header nav {
+        margin-top: 15px;
+    }
 
 .nav-link {
     display: inline-block;
@@ -55,9 +55,9 @@ header nav {
     transition: all 0.3s ease;
 }
 
-.nav-link:hover {
-    background: rgba(0, 212, 255, 0.2);
-}
+    .nav-link:hover {
+        background: rgba(0, 212, 255, 0.2);
+    }
 
 /* Upload Zone */
 .upload-zone {
@@ -71,27 +71,27 @@ header nav {
     margin-bottom: 25px;
 }
 
-.upload-zone:hover,
-.upload-zone.dragover {
-    border-color: #00d4ff;
-    background: rgba(0, 212, 255, 0.05);
-    transform: scale(1.01);
-}
+    .upload-zone:hover,
+    .upload-zone.dragover {
+        border-color: #00d4ff;
+        background: rgba(0, 212, 255, 0.05);
+        transform: scale(1.01);
+    }
 
-.upload-zone h2 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    color: #00d4ff;
-}
+    .upload-zone h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: #00d4ff;
+    }
 
-.upload-zone p {
-    color: #8892b0;
-    font-size: 0.9rem;
-}
+    .upload-zone p {
+        color: #8892b0;
+        font-size: 0.9rem;
+    }
 
-.upload-zone input {
-    display: none;
-}
+    .upload-zone input {
+        display: none;
+    }
 
 .upload-icon {
     font-size: 3rem;
@@ -118,7 +118,9 @@ header nav {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .progress-bar {
@@ -156,15 +158,17 @@ header nav {
     background: rgba(255,255,255,0.03);
     border-radius: 8px;
     margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.upload-result-item.success {
-    border-left: 3px solid #00ff88;
-}
+    .upload-result-item.success {
+        border-left: 3px solid #00ff88;
+    }
 
-.upload-result-item.error {
-    border-left: 3px solid #ff4444;
-}
+    .upload-result-item.error {
+        border-left: 3px solid #ff4444;
+    }
 
 /* Stats Bar */
 .stats-bar {
@@ -182,25 +186,25 @@ header nav {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-.stat-card.highlight {
-    background: rgba(0, 212, 255, 0.1);
-    border-color: rgba(0, 212, 255, 0.3);
-}
+    .stat-card.highlight {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: rgba(0, 212, 255, 0.3);
+    }
 
-.stat-card .value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #00d4ff, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
+    .stat-card .value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #00d4ff, #00ff88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-.stat-card .label {
-    color: #8892b0;
-    margin-top: 5px;
-    font-size: 0.8rem;
-}
+    .stat-card .label {
+        color: #8892b0;
+        margin-top: 5px;
+        font-size: 0.8rem;
+    }
 
 /* Actions Bar */
 .actions-bar {
@@ -219,20 +223,20 @@ header nav {
     min-width: 250px;
 }
 
-.search-box input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-    font-size: 0.95rem;
-}
+    .search-box input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+        font-size: 0.95rem;
+    }
 
-.search-box input:focus {
-    outline: none;
-    border-color: #00d4ff;
-}
+        .search-box input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
 
 .filter-buttons {
     display: flex;
@@ -251,15 +255,15 @@ header nav {
     font-size: 0.85rem;
 }
 
-.filter-btn:hover {
-    background: rgba(255,255,255,0.1);
-}
+    .filter-btn:hover {
+        background: rgba(255,255,255,0.1);
+    }
 
-.filter-btn.active {
-    background: rgba(0, 212, 255, 0.2);
-    border-color: #00d4ff;
-    color: #00d4ff;
-}
+    .filter-btn.active {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        color: #00d4ff;
+    }
 
 .action-buttons {
     display: flex;
@@ -281,10 +285,10 @@ header nav {
     color: #1a1a2e;
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
-}
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+    }
 
 .btn-danger {
     background: rgba(255, 68, 68, 0.2);
@@ -292,9 +296,9 @@ header nav {
     border: 1px solid rgba(255, 68, 68, 0.3);
 }
 
-.btn-danger:hover {
-    background: rgba(255, 68, 68, 0.3);
-}
+    .btn-danger:hover {
+        background: rgba(255, 68, 68, 0.3);
+    }
 
 /* Results Section */
 .results-section {
@@ -308,10 +312,10 @@ header nav {
     overflow-x: auto;
 }
 
+/* DESKTOP TABLE */
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
 }
 
 th, td {
@@ -344,18 +348,18 @@ td {
     cursor: pointer;
 }
 
-.awb-code:hover {
-    text-decoration: underline;
-}
+    .awb-code:hover {
+        text-decoration: underline;
+    }
 
 .ramburs {
     font-weight: bold;
     color: #ffd700;
 }
 
-.ramburs.zero {
-    color: #666;
-}
+    .ramburs.zero {
+        color: #666;
+    }
 
 /* Status Badge */
 .status-badge {
@@ -366,35 +370,36 @@ td {
     font-weight: 600;
 }
 
-.status-badge.pending {
-    background: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-}
+    .status-badge.pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
 
-.status-badge.livrat {
-    background: rgba(0, 255, 136, 0.2);
-    color: #00ff88;
-}
+    .status-badge.livrat {
+        background: rgba(0, 255, 136, 0.2);
+        color: #00ff88;
+    }
 
-.status-badge.returnat {
-    background: rgba(255, 68, 68, 0.2);
-    color: #ff4444;
-}
+    .status-badge.returnat {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+    }
 
 /* Action Buttons in Table */
 .table-actions {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
-.table-actions button {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s ease;
-}
+    .table-actions button {
+        padding: 6px 10px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+    }
 
 .btn-view {
     background: rgba(0, 212, 255, 0.2);
@@ -415,6 +420,23 @@ td {
     transform: scale(1.05);
 }
 
+/* Full text cell - pentru produse */
+.full-text-cell {
+    white-space: normal;
+    word-break: break-word;
+    min-width: 150px;
+    max-width: 300px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Data adaugare cell */
+.data-adaugare {
+    font-size: 0.8rem;
+    color: #8892b0;
+    white-space: nowrap;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -422,10 +444,10 @@ td {
     color: #666;
 }
 
-.empty-state .icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-}
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
 
 /* Modal */
 .modal {
@@ -452,10 +474,10 @@ td {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-.modal-content h3 {
-    color: #00d4ff;
-    margin-bottom: 20px;
-}
+    .modal-content h3 {
+        color: #00d4ff;
+        margin-bottom: 20px;
+    }
 
 .close {
     float: right;
@@ -465,19 +487,22 @@ td {
     cursor: pointer;
 }
 
-.close:hover {
-    color: #fff;
-}
+    .close:hover {
+        color: #fff;
+    }
 
 .detail-row {
     display: flex;
     margin-bottom: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .detail-label {
     width: 120px;
+    min-width: 120px;
     color: #8892b0;
     font-size: 0.85rem;
 }
@@ -485,6 +510,7 @@ td {
 .detail-value {
     flex: 1;
     color: #fff;
+    word-break: break-word;
 }
 
 /* Status Select in Modal */
@@ -497,43 +523,257 @@ td {
     cursor: pointer;
 }
 
-.full-text-cell {
-    white-space: normal;
-    min-width: 200px;
-    max-width: 400px;
-    font-size: 0.9em;
-    line-height: 1.4;
+/* ============================================
+   RESPONSIVE - CARD LAYOUT PENTRU MOBILE
+   ============================================ */
+
+@media (max-width: 1100px) {
+    .table-wrapper {
+        overflow-x: visible;
+    }
+
+    table {
+        min-width: auto;
+    }
+
+        /* Ascunde header-ul tabelului */
+        table thead {
+            display: none;
+        }
+
+        /* Transformă fiecare rând în card */
+        table tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 15px;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid #00d4ff;
+        }
+
+            table tbody tr:hover {
+                background: rgba(255,255,255,0.05);
+            }
+
+        /* Stilizare celule ca rânduri în card */
+        table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 10px;
+        }
+
+            table td:last-child {
+                border-bottom: none;
+                padding-top: 12px;
+            }
+
+            /* Adaugă label-uri pentru fiecare celulă */
+            table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #00d4ff;
+                font-size: 0.8rem;
+                min-width: 100px;
+                flex-shrink: 0;
+            }
+
+            /* Stiluri specifice pentru diferite celule */
+            table td:nth-child(1)::before {
+                content: "#";
+            }
+
+            table td:nth-child(2)::before {
+                content: "Data AWB";
+            }
+
+            table td:nth-child(3)::before {
+                content: "AWB";
+            }
+
+            table td:nth-child(4)::before {
+                content: "Destinatar";
+            }
+
+            table td:nth-child(5)::before {
+                content: "Produse";
+            }
+
+            table td:nth-child(6)::before {
+                content: "Ramburs";
+            }
+
+            table td:nth-child(7)::before {
+                content: "Telefon";
+            }
+
+            table td:nth-child(8)::before {
+                content: "Greutate";
+            }
+
+            table td:nth-child(9)::before {
+                content: "Status";
+            }
+
+            table td:nth-child(10)::before {
+                content: "Adăugat";
+            }
+
+            table td:nth-child(11)::before {
+                content: "Acțiuni";
+            }
+
+            /* AWB Code highlight */
+            table td:nth-child(3) {
+                background: rgba(0, 255, 136, 0.05);
+                border-radius: 6px;
+                padding: 10px;
+                margin: 5px 0;
+            }
+
+            /* Produse - full width */
+            table td:nth-child(5) {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+                table td:nth-child(5)::before {
+                    margin-bottom: 5px;
+                }
+
+    .full-text-cell {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Acțiuni - centrare */
+    table td:nth-child(11) {
+        justify-content: center;
+    }
+
+        table td:nth-child(11)::before {
+            display: none;
+        }
+
+    .table-actions {
+        justify-content: center;
+        width: 100%;
+    }
+
+        .table-actions button {
+            padding: 10px 15px;
+            font-size: 1rem;
+        }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Extra small screens */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
     header h1 {
         font-size: 1.5rem;
     }
-    
+
     .upload-zone {
-        padding: 30px 20px;
+        padding: 25px 15px;
     }
-    
+
     .stats-bar {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
+    .stat-card {
+        padding: 15px 10px;
+    }
+
+        .stat-card .value {
+            font-size: 1.4rem;
+        }
+
     .actions-bar {
         flex-direction: column;
+        padding: 10px;
     }
-    
+
     .search-box {
         width: 100%;
+        min-width: auto;
     }
-    
+
     .filter-buttons {
         width: 100%;
         justify-content: center;
     }
-    
+
     .action-buttons {
         width: 100%;
         justify-content: center;
+    }
+
+    .btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .results-section {
+        padding: 10px;
+    }
+
+    table tbody tr {
+        padding: 12px;
+    }
+
+    table td {
+        font-size: 0.85rem;
+    }
+
+    .modal-content {
+        margin: 2% auto;
+        padding: 20px;
+        width: 95%;
+    }
+
+    .detail-label {
+        width: 100%;
+        margin-bottom: 3px;
+    }
+
+    .detail-row {
+        flex-direction: column;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: #fff;
+        color: #000;
+    }
+
+    .upload-zone,
+    .actions-bar,
+    .table-actions,
+    header nav,
+    .btn {
+        display: none !important;
+    }
+
+    table {
+        border: 1px solid #ccc;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        color: #000;
+    }
+
+    th {
+        background: #f0f0f0;
     }
 }

@@ -40,7 +40,7 @@ public class DepozitController : Controller
         return Json(awbs);
     }
 
-    // Returnează coletele PENDING care trebuie pregătite
+    // Returnează coletele PENDING care trebuie pregătite - INCLUDE CaleFisier pentru print
     [HttpGet]
     public async Task<IActionResult> GetColeteDePregatit()
     {
@@ -58,7 +58,8 @@ public class DepozitController : Controller
                 c.Telefon,
                 c.GreutateKg,
                 c.DataAwb,
-                c.Status
+                c.Status,
+                c.CaleFisier // ADĂUGAT pentru buton print
             })
             .ToListAsync();
         return Json(colete);
@@ -239,32 +240,42 @@ public class DepozitController : Controller
         return Json(new { success = true });
     }
 
+    // MODIFICAT: Add cu verificare duplicat - returnează eroare dacă există
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AwbRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Code))
-            return BadRequest();
+            return BadRequest(new { error = true, message = "Cod AWB invalid" });
 
+        // Verifică dacă AWB-ul există deja
         var existing = await _db.Awbs.FirstOrDefaultAsync(a => a.Code == request.Code);
-        if (existing == null)
+        if (existing != null)
         {
-            var awb = new Awb
+            return Json(new
             {
-                Code = request.Code,
-                Courier = request.Courier ?? "CARGUS",
-                ScannedAt = DateTime.Now
-            };
-            _db.Awbs.Add(awb);
-
-            _db.AuditLogs.Add(new AuditLog
-            {
-                Action = "ADD",
-                EntityType = "AWB",
-                EntityInfo = $"Cod: {request.Code}, Curier: {request.Courier}"
+                error = true,
+                message = "AWB-ul există deja în sistem!",
+                existingCode = request.Code,
+                scannedAt = existing.ScannedAt
             });
-
-            await _db.SaveChangesAsync();
         }
+
+        var awb = new Awb
+        {
+            Code = request.Code,
+            Courier = request.Courier ?? "CARGUS",
+            ScannedAt = DateTime.Now
+        };
+        _db.Awbs.Add(awb);
+
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Action = "ADD",
+            EntityType = "AWB",
+            EntityInfo = $"Cod: {request.Code}, Curier: {request.Courier}"
+        });
+
+        await _db.SaveChangesAsync();
 
         return await GetAll();
     }

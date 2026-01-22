@@ -174,6 +174,17 @@ async function loadStats() {
     }
 }
 
+function formatDateTime(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
 function renderTable() {
     if (colete.length === 0) {
         coleteBody.innerHTML = '';
@@ -185,20 +196,20 @@ function renderTable() {
     emptyState.style.display = 'none';
     document.querySelector('.table-wrapper').style.display = 'block';
 
-    // AICI am adăugat coloana DATA și am scos truncate de la produse
-    // În renderTable() - ordinea: Data -> AWB -> Destinatar -> Produse
+    // Render cu data-label pentru responsive și data adăugare
     coleteBody.innerHTML = colete.map((c, index) => `
     <tr>
-        <td>${index + 1}</td>
-        <td title="${c.dataAwb || ''}">${c.dataAwb || '-'}</td>
-        <td class="awb-code" onclick="showDetails(${c.id})">${c.awbCode || '-'}</td>
-        <td>${c.destinatar || '-'}</td>
-        <td class="full-text-cell">${c.observatii || '-'}</td>
-        <td class="ramburs ${c.rambursRon === 0 ? 'zero' : ''}">${c.rambursRon} RON</td>
-        <td>${c.telefon || '-'}</td>
-        <td>${c.greutateKg} kg</td>
-        <td><span class="status-badge ${c.status.toLowerCase()}">${getStatusLabel(c.status)}</span></td>
-        <td>
+        <td data-label="#">${index + 1}</td>
+        <td data-label="Data AWB" title="${c.dataAwb || ''}">${c.dataAwb || '-'}</td>
+        <td data-label="AWB" class="awb-code" onclick="showDetails(${c.id})">${c.awbCode || '-'}</td>
+        <td data-label="Destinatar">${c.destinatar || '-'}</td>
+        <td data-label="Produse" class="full-text-cell">${c.observatii || '-'}</td>
+        <td data-label="Ramburs" class="ramburs ${c.rambursRon === 0 ? 'zero' : ''}">${c.rambursRon} RON</td>
+        <td data-label="Telefon">${c.telefon || '-'}</td>
+        <td data-label="Greutate">${c.greutateKg} kg</td>
+        <td data-label="Status"><span class="status-badge ${c.status.toLowerCase()}">${getStatusLabel(c.status)}</span></td>
+        <td data-label="Adăugat" class="data-adaugare" title="Data încărcare în sistem">${formatDateTime(c.createdAt)}</td>
+        <td data-label="Acțiuni">
             <div class="table-actions">
                 <button class="btn-view" onclick="showDetails(${c.id})" title="Detalii">👁️</button>
                 <button class="btn-status" onclick="changeStatus(${c.id}, '${c.status}')" title="Schimbă status">✓</button>
@@ -235,7 +246,8 @@ function showDetails(id) {
 
     content.innerHTML = `
         <div class="detail-row"><span class="detail-label">AWB:</span><span class="detail-value awb-code">${colet.awbCode}</span></div>
-        <div class="detail-row"><span class="detail-label">Data:</span><span class="detail-value">${colet.dataAwb || '-'}</span></div>
+        <div class="detail-row"><span class="detail-label">Data AWB:</span><span class="detail-value">${colet.dataAwb || '-'}</span></div>
+        <div class="detail-row"><span class="detail-label">Adăugat în sistem:</span><span class="detail-value">${formatDateTime(colet.createdAt)}</span></div>
         <div class="detail-row"><span class="detail-label">Destinatar:</span><span class="detail-value">${colet.destinatar || '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Produse:</span><span class="detail-value full-text-cell">${colet.observatii || '-'}</span></div>
         <div class="detail-row"><span class="detail-label">Ramburs:</span><span class="detail-value ramburs">${colet.rambursRon} RON</span></div>

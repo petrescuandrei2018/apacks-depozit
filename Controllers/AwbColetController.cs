@@ -6,8 +6,9 @@ using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+// Asigură-te că PDFtoImage este instalat prin NuGet
+// using PDFtoImage; 
 using Tesseract;
-// PDFtoImage namespace trebuie să fie disponibil din NuGet
 
 namespace Apacks.Depozit.Controllers;
 
@@ -99,7 +100,16 @@ public class AwbColetController : Controller
         var uploadsPath = Path.Combine(_env.WebRootPath, "awb-pdfs");
 
         if (!Directory.Exists(uploadsPath))
-            Directory.CreateDirectory(uploadsPath);
+        {
+            try
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"EROARE SERVER (PERMISIUNI): Nu pot crea folderul {uploadsPath}. Contactează adminul serverului (Plesk). Eroare: {ex.Message}");
+            }
+        }
 
         foreach (var file in files)
         {
@@ -114,9 +124,10 @@ public class AwbColetController : Controller
                 var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
                 var filePath = Path.Combine(uploadsPath, fileName);
 
-                // FIX: Folosim System.IO.File explicit
                 using (var stream = new FileStream(filePath, FileMode.Create))
+                {
                     await file.CopyToAsync(stream);
+                }
 
                 var (extractedData, debugInfo) = ExtractDataFromPdfWithDebug(filePath, file.FileName);
 
@@ -169,6 +180,10 @@ public class AwbColetController : Controller
                     });
                 }
             }
+            catch (UnauthorizedAccessException)
+            {
+                results.Add(new { FileName = file.FileName, Success = false, Error = "ACCES INTERZIS: Serverul nu are drepturi de scriere în folder." });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Eroare la procesarea fișierului {FileName}", file.FileName);
@@ -197,7 +212,7 @@ public class AwbColetController : Controller
         var debugLog = new List<string>();
         string textExtras = "";
 
-        // 1. Încearcă iText
+        // 1. Încearcă iText (Metoda Location păstrează mai bine structura tabelară)
         try
         {
             using var reader = new PdfReader(filePath);
@@ -216,76 +231,121 @@ public class AwbColetController : Controller
             debugLog.Add($"iText eroare: {ex.Message}");
         }
 
-        // 2. Curățare text
-        string textExtrasRaw = textExtras;
+        // 2. Curățare text pentru regex
         textExtras = textExtras.Replace("\n", " ").Replace("\r", " ");
         textExtras = Regex.Replace(textExtras, @"\s+", " ");
 
         // 3. OCR Fallback
-        if (string.IsNullOrWhiteSpace(textExtras) || textExtras.Length < 100)
+        if (string.IsNullOrWhiteSpace(textExtras) || textExtras.Length < 50)
         {
-            debugLog.Add("iText insuficient, folosim OCR...");
-            textExtras = ExtractTextWithOcr(filePath, debugLog);
-            textExtras = textExtras.Replace("\n", " ").Replace("\r", " ");
-            textExtras = Regex.Replace(textExtras, @"\s+", " ");
+            debugLog.Add("iText insuficient, încercăm OCR...");
+            try
+            {
+                textExtras = ExtractTextWithOcr(filePath, debugLog);
+                textExtras = textExtras.Replace("\n", " ").Replace("\r", " ");
+                textExtras = Regex.Replace(textExtras, @"\s+", " ");
+            }
+            catch (Exception ocrEx)
+            {
+                debugLog.Add("OCR a eșuat: " + ocrEx.Message);
+            }
         }
 
-        debugLog.Add($"Text curat: {textExtras.Substring(0, Math.Min(500, textExtras.Length))}");
+        debugLog.Add($"RAW TEXT: {textExtras.Substring(0, Math.Min(1000, textExtras.Length))}");
 
         // === EXTRAGERE DATE ===
 
         // AWB
         var awbMatch = Regex.Match(textExtras, @"\b(117\d{7})\b");
-        if (awbMatch.Success)
-        {
-            colet.AwbCode = awbMatch.Groups[1].Value;
-            debugLog.Add($"AWB găsit: {colet.AwbCode}");
-        }
+        if (awbMatch.Success) colet.AwbCode = awbMatch.Groups[1].Value;
 
         // Destinatar
         var destMatch = Regex.Match(textExtras, @"Destinatar\s*:\s*(.*?)(?=\s*(?:Cod postal|Adresa|Telefon|Contact))", RegexOptions.IgnoreCase);
-        if (destMatch.Success)
-        {
-            colet.Destinatar = destMatch.Groups[1].Value.Trim();
-            debugLog.Add($"Destinatar: {colet.Destinatar}");
-        }
+        if (destMatch.Success) colet.Destinatar = destMatch.Groups[1].Value.Trim();
 
         // Observații
         var obsMatch = Regex.Match(textExtras, @"Observatii\s*:\s*(.*?)(?=\s*(?:Nume curier|Motiv|Totul|$))", RegexOptions.IgnoreCase);
-        if (obsMatch.Success)
-        {
-            colet.Observatii = obsMatch.Groups[1].Value.Trim();
-            debugLog.Add($"Observatii: {colet.Observatii}");
-        }
+        if (obsMatch.Success) colet.Observatii = obsMatch.Groups[1].Value.Trim();
 
         // === RAMBURS ===
         var rambursPatterns = new[]
         {
-            @"(\d+)[,\.](\d{2})\s+0[,\.]00",
-            @"Ramburs.*?(\d+)[,\.](\d{2})\s*(?:RON|Lei)",
-            @"Cash\s*(\d+)[,\.](\d{2})"
+            @"(\d+)[,\.](\d{2})\s+0[,\.]00", // Pattern Cargus: Suma | 0,00
+            @"(\d+)[,\.](\d{2})\s+\d{1,3}[,\.]\d{2}",
+            @"Cash\s*(\d+)[,\.](\d{2})",
+            @"Ramburs.*?(\d+)[,\.](\d{2})\s*(?:RON|Lei)"
         };
 
         foreach (var pattern in rambursPatterns)
         {
-            var match = Regex.Match(textExtras, pattern, RegexOptions.IgnoreCase);
-            if (match.Success)
+            var matches = Regex.Matches(textExtras, pattern, RegexOptions.IgnoreCase);
+            foreach (Match match in matches)
             {
-                string sumaStr = match.Groups[1].Value + "." + match.Groups[2].Value;
-                if (decimal.TryParse(sumaStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var suma) && suma > 0)
+                if (match.Success)
                 {
-                    colet.RambursRon = suma;
-                    debugLog.Add($"✓ RAMBURS GĂSIT ({pattern}): {suma} RON");
-                    break;
+                    string sumaStr = match.Groups[1].Value + "." + match.Groups[2].Value;
+                    if (decimal.TryParse(sumaStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var suma))
+                    {
+                        if (suma > 0 && suma < 20000)
+                        {
+                            bool isStrictPattern = pattern.Contains("0[,,]00") || pattern.Contains("Cash") || pattern.Contains("Ramburs");
+                            if (isStrictPattern || suma > 30)
+                            {
+                                colet.RambursRon = suma;
+                                debugLog.Add($"✓ RAMBURS GĂSIT (Pattern: {pattern}): {suma} RON");
+                                goto RambursFound;
+                            }
+                        }
+                    }
                 }
             }
         }
+    RambursFound:;
 
-        if (colet.RambursRon == 0) debugLog.Add("✗ Ramburs negăsit");
+        if (colet.RambursRon == 0) debugLog.Add("✗ Ramburs negăsit în text.");
 
-        // Telefon
-        var phoneMatch = Regex.Match(textExtras, @"(07\d{8})");
-        if (phoneMatch.Success) colet.Telefon = phoneMatch.Value;
+        // ============================================
+        // TELEFON (Logică actualizată pentru Destinatar)
+        // ============================================
+
+        // Găsim TOATE numerele de mobil din text
+        var allPhoneMatches = Regex.Matches(textExtras, @"(07\d{8})");
+
+        // Lista numerelor tale (expeditor) de IGNORAT
+        var ignoredPhones = new[] { "0762603856", "0766365440" };
+
+        bool phoneFound = false;
+        foreach (Match match in allPhoneMatches)
+        {
+            string foundPhone = match.Value;
+
+            // Verificăm dacă numărul este în lista celor de ignorat
+            bool isMyPhone = false;
+            foreach (var myPhone in ignoredPhones)
+            {
+                if (foundPhone.Contains(myPhone)) { isMyPhone = true; break; }
+            }
+
+            if (!isMyPhone)
+            {
+                // Este primul număr care NU e al expeditorului -> Presupunem că e al destinatarului
+                colet.Telefon = foundPhone;
+                debugLog.Add($"✓ Telefon Destinatar identificat: {foundPhone}");
+                phoneFound = true;
+                break;
+            }
+            else
+            {
+                debugLog.Add($"! Ignorat telefon expeditor (al tau): {foundPhone}");
+            }
+        }
+
+        if (!phoneFound)
+        {
+            debugLog.Add("✗ Niciun telefon de destinatar găsit (toate erau ale expeditorului sau nu existau).");
+        }
+
+        // ============================================
 
         // Cod Postal
         var zipMatch = Regex.Match(textExtras, @"Cod postal\s*:\s*(\d{6})");
@@ -293,15 +353,8 @@ public class AwbColetController : Controller
 
         // Greutate
         var weightMatch = Regex.Match(textExtras, @"(\d+)\s+kg", RegexOptions.IgnoreCase);
-        if (!weightMatch.Success)
-            weightMatch = Regex.Match(textExtras, @"\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s+\d+\s+\d+\s+Inaltime");
-
-        if (weightMatch.Success && decimal.TryParse(weightMatch.Groups[1].Value, out var weight))
-            colet.GreutateKg = weight;
-
-        // Data
-        var dateMatch = Regex.Match(textExtras, @"Data\s*[:\s]*\s*(\d{2}\.\d{2}\.\d{4})");
-        if (dateMatch.Success) colet.DataAwb = dateMatch.Groups[1].Value;
+        if (!weightMatch.Success) weightMatch = Regex.Match(textExtras, @"\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s+\d+\s+\d+\s+Inaltime");
+        if (weightMatch.Success && decimal.TryParse(weightMatch.Groups[1].Value, out var weight)) colet.GreutateKg = weight;
 
         // Fallback la filename
         if (string.IsNullOrEmpty(colet.AwbCode) || string.IsNullOrEmpty(colet.Destinatar))
@@ -324,13 +377,9 @@ public class AwbColetController : Controller
     private string ExtractTextWithOcr(string pdfPath, List<string> debugLog)
     {
         var sb = new System.Text.StringBuilder();
-
         try
         {
-            // FIX: System.IO.File explicit
             using var pdfStream = System.IO.File.OpenRead(pdfPath);
-
-            // FIX: Am eliminat parametrul 'dpi' care cauza eroarea
             var images = PDFtoImage.Conversion.ToImages(pdfStream);
 
             int pageNum = 0;
@@ -338,29 +387,20 @@ public class AwbColetController : Controller
             {
                 pageNum++;
                 var tempImagePath = Path.GetTempFileName() + ".png";
-
                 try
                 {
-                    // FIX: System.IO.File explicit
                     using (var fs = System.IO.File.OpenWrite(tempImagePath))
                     {
                         image.Encode(fs, SkiaSharp.SKEncodedImageFormat.Png, 100);
                     }
-
-                    // OCR
                     using var engine = new TesseractEngine(_tessdataPath, "eng", EngineMode.Default);
                     using var img = Pix.LoadFromFile(tempImagePath);
                     using var page = engine.Process(img);
-
-                    var pageText = page.GetText();
-                    sb.AppendLine(pageText);
-                    debugLog.Add($"OCR pagina {pageNum}: {pageText.Length} caractere");
+                    sb.AppendLine(page.GetText());
                 }
                 finally
                 {
-                    // FIX: System.IO.File explicit
-                    if (System.IO.File.Exists(tempImagePath))
-                        System.IO.File.Delete(tempImagePath);
+                    if (System.IO.File.Exists(tempImagePath)) System.IO.File.Delete(tempImagePath);
                 }
             }
         }
@@ -368,7 +408,6 @@ public class AwbColetController : Controller
         {
             debugLog.Add($"OCR eroare: {ex.Message}");
         }
-
         return sb.ToString();
     }
 
@@ -376,18 +415,14 @@ public class AwbColetController : Controller
     {
         var colet = new AwbColet { NumeFisier = filename, Curier = "CARGUS" };
         var name = Path.GetFileNameWithoutExtension(filename);
-
         var awbMatch = Regex.Match(name, @"(117\d{7})");
         if (awbMatch.Success)
         {
             colet.AwbCode = awbMatch.Groups[1].Value;
             var parts = name.Split(colet.AwbCode);
-            if (parts.Length >= 1 && !string.IsNullOrEmpty(parts[0]))
-                colet.Destinatar = parts[0].Trim('_', ' ').Replace('_', ' ');
-            if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[1]))
-                colet.Observatii = parts[1].Trim('_', ' ').Replace('_', ' ');
+            if (parts.Length >= 1) colet.Destinatar = parts[0].Trim('_', ' ').Replace('_', ' ');
+            if (parts.Length >= 2) colet.Observatii = parts[1].Trim('_', ' ').Replace('_', ' ');
         }
-
         return colet;
     }
 
@@ -396,18 +431,8 @@ public class AwbColetController : Controller
     {
         var colet = await _db.AwbColete.FindAsync(id);
         if (colet == null) return NotFound();
-
-        var oldStatus = colet.Status;
         colet.Status = status;
         colet.UpdatedAt = DateTime.Now;
-
-        _db.AuditLogs.Add(new AuditLog
-        {
-            Action = "UPDATE_STATUS",
-            EntityType = "COLET",
-            EntityInfo = $"AWB: {colet.AwbCode}, Status: {oldStatus} → {status}"
-        });
-
         await _db.SaveChangesAsync();
         return Json(new { success = true });
     }
@@ -417,69 +442,39 @@ public class AwbColetController : Controller
     {
         var colet = await _db.AwbColete.FindAsync(id);
         if (colet == null) return NotFound();
-
         if (!string.IsNullOrEmpty(colet.CaleFisier))
         {
             var filePath = Path.Combine(_env.WebRootPath, colet.CaleFisier.TrimStart('/'));
-            // FIX: System.IO.File explicit
-            if (System.IO.File.Exists(filePath))
-                System.IO.File.Delete(filePath);
+            if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
         }
-
-        _db.AuditLogs.Add(new AuditLog
-        {
-            Action = "DELETE_COLET",
-            EntityType = "COLET",
-            EntityInfo = $"AWB: {colet.AwbCode}, Destinatar: {colet.Destinatar}"
-        });
-
         _db.AwbColete.Remove(colet);
         await _db.SaveChangesAsync();
-
         return Json(new { success = true });
     }
 
     [HttpPost]
     public async Task<IActionResult> Clear()
     {
-        var count = await _db.AwbColete.CountAsync();
-
         var uploadsPath = Path.Combine(_env.WebRootPath, "awb-pdfs");
-        if (Directory.Exists(uploadsPath))
+        if (System.IO.Directory.Exists(uploadsPath))
         {
-            foreach (var file in Directory.GetFiles(uploadsPath))
+            foreach (var file in System.IO.Directory.GetFiles(uploadsPath))
             {
-                // FIX: System.IO.File explicit
                 try { System.IO.File.Delete(file); } catch { }
             }
         }
-
-        _db.AuditLogs.Add(new AuditLog
-        {
-            Action = "CLEAR_COLETE",
-            EntityType = "COLET",
-            EntityInfo = $"Șterse {count} colete"
-        });
-
         _db.AwbColete.RemoveRange(_db.AwbColete);
         await _db.SaveChangesAsync();
-
-        return Json(new { success = true, deleted = count });
+        return Json(new { success = true });
     }
 
     [HttpGet]
     public async Task<IActionResult> ExportExcel()
     {
         var colete = await _db.AwbColete.OrderByDescending(c => c.CreatedAt).ToListAsync();
-
         var csv = "AWB,Destinatar,Observatii,Ramburs RON,Telefon,Adresa,Cod Postal,Greutate,Data,Status\n";
-        foreach (var c in colete)
-        {
-            csv += $"\"{c.AwbCode}\",\"{c.Destinatar}\",\"{c.Observatii}\",{c.RambursRon},\"{c.Telefon}\",\"{c.Adresa}\",\"{c.CodPostal}\",{c.GreutateKg},\"{c.DataAwb}\",\"{c.Status}\"\n";
-        }
-
+        foreach (var c in colete) csv += $"\"{c.AwbCode}\",\"{c.Destinatar}\",\"{c.Observatii}\",{c.RambursRon},\"{c.Telefon}\",\"{c.Adresa}\",\"{c.CodPostal}\",{c.GreutateKg},\"{c.DataAwb}\",\"{c.Status}\"\n";
         var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(csv)).ToArray();
-        // Aici lăsăm 'File' simplu, deoarece ne referim la metoda Controller-ului
         return File(bytes, "text/csv", $"colete_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
     }
 }

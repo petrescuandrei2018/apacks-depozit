@@ -16,6 +16,51 @@ let selectedDate = '';
 // Istoric print-uri (localStorage)
 let printHistory = JSON.parse(localStorage.getItem('printHistory') || '{}');
 
+// Iconuri pentru produse
+const productIcons = {
+    'perie': '🪥',
+    'cleste': '🦞',
+    'cocos': '🥥',
+    'carbuni rosii': '🔴',
+    'rosii': '🔴',
+    'lana lemn': '🧶',
+    'kit lemne': '🪵',
+    'lemne': '🪵',
+    'cana': '☕'
+};
+
+function getProductIcon(text) {
+    if (!text) return '';
+    const lowerText = text.toLowerCase();
+    for (const [keyword, icon] of Object.entries(productIcons)) {
+        if (lowerText.includes(keyword)) {
+            return icon + ' ';
+        }
+    }
+    return '📦 ';
+}
+
+function formatProductsWithIcons(text) {
+    if (!text) return '-';
+    let result = text;
+    const lowerText = text.toLowerCase();
+
+    // Adaugă iconuri la început bazat pe conținut
+    let icons = [];
+    if (lowerText.includes('perie')) icons.push('🪥');
+    if (lowerText.includes('cleste')) icons.push('🦞');
+    if (lowerText.includes('cocos')) icons.push('🥥');
+    if (lowerText.includes('carbuni') && lowerText.includes('rosii')) icons.push('🔴');
+    if (lowerText.includes('lana') && lowerText.includes('lemn')) icons.push('🧶');
+    if (lowerText.includes('kit') && lowerText.includes('lemn')) icons.push('🪵');
+    if (lowerText.includes('cana')) icons.push('☕');
+
+    if (icons.length > 0) {
+        return icons.join(' ') + ' ' + result;
+    }
+    return '📦 ' + result;
+}
+
 // FUNCȚIE CENTRALIZATĂ: Refresh toate cele 3 secțiuni
 async function refreshAll() {
     await Promise.all([
@@ -38,7 +83,12 @@ function startScanning(courier) {
     document.getElementById('activeCourierLabel').textContent = `Scanare activă: ${label}`;
     document.getElementById('activeScanner').style.display = 'flex';
 
-    document.getElementById('awb').focus();
+    // Focus pe input-ul invizibil pentru scanare (fără tastatură)
+    const scanInput = document.getElementById('scanInput');
+    scanInput.focus();
+    // Previne tastatura pe mobil
+    scanInput.setAttribute('readonly', 'readonly');
+    setTimeout(() => scanInput.removeAttribute('readonly'), 100);
 }
 
 function stopScanning() {
@@ -114,7 +164,7 @@ function renderColeteDePregatit() {
             </div>
             <div class="colet-info">
                 <div class="colet-destinatar">👤 ${c.destinatar || '-'}</div>
-                <div class="colet-produse">📦 ${c.observatii || '-'}</div>
+                <div class="colet-produse">${formatProductsWithIcons(c.observatii)}</div>
                 <div class="colet-details">
                     <span class="colet-ramburs">💰 ${c.rambursRon} RON</span>
                     <span class="colet-greutate">⚖️ ${c.greutateKg} kg</span>
@@ -324,7 +374,7 @@ function renderColetePregatie(result) {
             </div>
             <div class="pregatie-info">
                 <span class="pregatie-destinatar">👤 ${c.destinatar || '-'}</span>
-                <span class="pregatie-produse">📦 ${c.observatii || '-'}</span>
+                <span class="pregatie-produse">${formatProductsWithIcons(c.observatii)}</span>
             </div>
             <div class="pregatie-footer">
                 <span class="pregatie-ramburs">💰 ${c.rambursRon} RON</span>
@@ -358,12 +408,21 @@ function getCourierLabel(courier) {
     return labels[courier] || courier;
 }
 
+function getCourierThemeClass(courier) {
+    switch (courier) {
+        case 'CARGUS': return 'theme-cargus';
+        case 'FAN': return 'theme-fan';
+        case 'OLXFAN': return 'theme-olxfan';
+        default: return '';
+    }
+}
+
 function render() {
     const total = currentFilter ? `${awbs.length} (din ${allAwbs.length} total)` : awbs.length;
     document.getElementById('count').textContent = `Total: ${total} AWB-uri`;
 
     document.getElementById('list').innerHTML = awbs.map(a =>
-        `<div class="awb">
+        `<div class="awb ${getCourierThemeClass(a.courier)}">
             <div class="awb-header">
                 <div class="awb-info">
                     <span class="awb-code">
@@ -371,10 +430,17 @@ function render() {
                         <span class="courier-badge ${a.courier}">${getCourierLabel(a.courier)}</span>
                         ${a.mediaCount > 0 ? `<span class="media-badge">📷 ${a.mediaCount}</span>` : ''}
                     </span>
+                    ${a.coletInfo ? `
+                        <div class="awb-colet-info">
+                            <span class="awb-destinatar">👤 ${a.coletInfo.destinatar || '-'}</span>
+                            <span class="awb-produse">${formatProductsWithIcons(a.coletInfo.observatii)}</span>
+                            <span class="awb-pret">💰 ${a.coletInfo.rambursRon || 0} RON</span>
+                        </div>
+                    ` : ''}
                     <span class="awb-date">📅 ${formatDate(a.scannedAt)}</span>
                 </div>
                 <div class="awb-actions">
-                    <button class="btn-media" onclick="openMediaModal(${a.id}, '${a.code}', ${a.mediaCount})">📷</button>
+                    <button class="btn-media" onclick="openMediaModal(${a.id}, '${a.code}', ${a.mediaCount}); event.preventDefault(); return false;">📷</button>
                     <button class="btn-delete" onclick="remove('${a.code}')">✕</button>
                 </div>
             </div>
@@ -398,6 +464,9 @@ function openMediaModal(awbId, awbCode, mediaCount) {
     document.getElementById('mediaCount').textContent = `${mediaCount}/10 fișiere încărcate`;
     document.getElementById('mediaModal').style.display = 'block';
     document.getElementById('uploadStatus').style.display = 'none';
+
+    // Blur pentru a preveni tastatura
+    document.activeElement.blur();
 
     const awb = allAwbs.find(a => a.id === awbId);
     if (awb && awb.media && awb.media.length > 0) {
@@ -665,12 +734,13 @@ async function anuleazaPregatire(id, awbCode) {
     }
 }
 
-// Event listener pentru input AWB
-document.getElementById('awb').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const val = e.target.value.trim();
-        if (!val) return;
+// Handler pentru input SCANARE (fără tastatură pe mobil)
+document.getElementById('scanInput').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    if (!val) return;
 
+    // Detectează dacă e un cod complet (de obicei scanerele trimit tot codul odată)
+    if (val.length >= 10) {
         // Verificare locală pentru răspuns instant
         if (allAwbs.some(a => a.code === val)) {
             showDuplicateWarning(val);
@@ -678,18 +748,69 @@ document.getElementById('awb').addEventListener('keypress', (e) => {
             return;
         }
 
-        const courier = isScanning && currentCourier ? currentCourier : document.getElementById('manualCourier').value;
-
+        const courier = isScanning && currentCourier ? currentCourier : 'CARGUS';
         addAwb(val, courier);
         e.target.value = '';
-        e.target.focus();
     }
 });
 
-document.getElementById('awb').addEventListener('blur', () => {
+// Handler pentru Enter pe input scanare
+document.getElementById('scanInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        if (!val) return;
+
+        if (allAwbs.some(a => a.code === val)) {
+            showDuplicateWarning(val);
+            e.target.value = '';
+            return;
+        }
+
+        const courier = isScanning && currentCourier ? currentCourier : 'CARGUS';
+        addAwb(val, courier);
+        e.target.value = '';
+    }
+});
+
+// Handler pentru input MANUAL
+document.getElementById('manualAwb').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        submitManualAwb();
+    }
+});
+
+function submitManualAwb() {
+    const input = document.getElementById('manualAwb');
+    const val = input.value.trim();
+    if (!val) return;
+
+    // Verificare locală pentru răspuns instant
+    if (allAwbs.some(a => a.code === val)) {
+        showDuplicateWarning(val);
+        input.value = '';
+        return;
+    }
+
+    const courier = document.getElementById('manualCourier').value;
+    addAwb(val, courier);
+    input.value = '';
+    input.focus();
+}
+
+// Buton scanare - focus fără tastatură
+function focusScanInput() {
+    const scanInput = document.getElementById('scanInput');
+    scanInput.setAttribute('inputmode', 'none');
+    scanInput.focus();
+    scanInput.value = '';
+}
+
+document.getElementById('scanInput').addEventListener('blur', () => {
     if (isScanning) {
         setTimeout(() => {
-            document.getElementById('awb').focus();
+            const scanInput = document.getElementById('scanInput');
+            scanInput.setAttribute('inputmode', 'none');
+            scanInput.focus();
         }, 100);
     }
 });
@@ -721,5 +842,5 @@ async function init() {
 
 init();
 
-// Refresh periodic - toate cele 3 secțiuni la fiecare 5 secunde
-setInterval(refreshAll, 5000);
+// Refresh periodic - toate cele 3 secțiuni la fiecare 3 secunde (mai rapid)
+setInterval(refreshAll, 3000);

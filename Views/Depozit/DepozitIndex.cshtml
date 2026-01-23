@@ -44,6 +44,19 @@
         }
         .nav-link:hover { background: rgba(0, 212, 255, 0.2); }
 
+        /* TEME CURIER */
+        .theme-cargus { border-left-color: #ff9800 !important; }
+        .theme-cargus .awb-code { color: #ff9800 !important; }
+        .theme-cargus .courier-badge { background: #ff9800 !important; }
+        
+        .theme-fan { border-left-color: #2196f3 !important; }
+        .theme-fan .awb-code { color: #2196f3 !important; }
+        .theme-fan .courier-badge { background: #2196f3 !important; }
+        
+        .theme-olxfan { border-left-color: #9c27b0 !important; }
+        .theme-olxfan .awb-code { color: #9c27b0 !important; }
+        .theme-olxfan .courier-badge { background: #9c27b0 !important; }
+
         /* SECȚIUNEA COLETE DE PREGĂTIT */
         .colete-section {
             background: rgba(255, 193, 7, 0.1);
@@ -334,6 +347,12 @@
             color: #ccc;
             flex-wrap: wrap;
         }
+        .pregatie-produse {
+            color: #00d4ff;
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 4px;
+        }
         .pregatie-footer {
             display: flex;
             justify-content: space-between;
@@ -399,9 +418,37 @@
         }
         .courier-btn:hover { border-color: #00d4ff; }
         .courier-btn.active {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: #00d4ff;
-            color: #00d4ff;
+            transform: scale(0.98);
+        }
+        
+        /* Buton CARGUS - portocaliu */
+        #btnCargus {
+            border-color: rgba(255, 152, 0, 0.5);
+            color: #ff9800;
+        }
+        #btnCargus:hover, #btnCargus.active {
+            background: rgba(255, 152, 0, 0.2);
+            border-color: #ff9800;
+        }
+        
+        /* Buton FAN - albastru */
+        #btnFan {
+            border-color: rgba(33, 150, 243, 0.5);
+            color: #2196f3;
+        }
+        #btnFan:hover, #btnFan.active {
+            background: rgba(33, 150, 243, 0.2);
+            border-color: #2196f3;
+        }
+        
+        /* Buton OLX FAN - mov */
+        #btnOlxFan {
+            border-color: rgba(156, 39, 176, 0.5);
+            color: #9c27b0;
+        }
+        #btnOlxFan:hover, #btnOlxFan.active {
+            background: rgba(156, 39, 176, 0.2);
+            border-color: #9c27b0;
         }
 
         .active-scanner {
@@ -426,33 +473,117 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
 
-        .input-group {
+        /* INPUT SEPARAT: SCANARE vs MANUAL */
+        .input-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .scan-input-section {
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .scan-input-section h3 {
+            color: #00ff88;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .scan-input-wrapper {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            align-items: center;
+        }
+        #scanInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 255, 136, 0.05);
+            color: #00ff88;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+        }
+        #scanInput:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        .btn-scan-focus {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-scan-focus:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        .manual-input-section {
+            background: rgba(0, 212, 255, 0.05);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .manual-input-section h3 {
+            color: #00d4ff;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .manual-input-wrapper {
+            display: flex;
+            gap: 10px;
             flex-wrap: wrap;
         }
-        .input-group input {
+        #manualAwb {
             flex: 1;
             min-width: 200px;
-            padding: 15px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 212, 255, 0.05);
             color: #fff;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
-        .input-group input:focus {
+        #manualAwb:focus {
             outline: none;
             border-color: #00d4ff;
         }
-        .input-group select {
-            padding: 15px;
+        #manualCourier {
+            padding: 12px 15px;
             border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
+            border-radius: 10px;
             background: rgba(255,255,255,0.05);
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.9rem;
+        }
+        .btn-manual-add {
+            padding: 12px 20px;
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-manual-add:hover {
+            background: rgba(0, 212, 255, 0.3);
         }
 
         .filter-buttons {
@@ -523,15 +654,43 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+        
+        /* Info colet în AWB */
+        .awb-colet-info {
+            margin-top: 8px;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .awb-destinatar {
+            color: #fff;
+            font-weight: 600;
+        }
+        .awb-produse {
+            color: #00d4ff;
+            font-size: 0.9rem;
+            padding: 5px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 4px;
+        }
+        .awb-pret {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
         .courier-badge {
             font-size: 0.7rem;
             padding: 2px 8px;
             border-radius: 10px;
             font-weight: 600;
+            color: #fff;
         }
-        .courier-badge.CARGUS { background: #ff6b35; color: #fff; }
-        .courier-badge.FAN { background: #0066cc; color: #fff; }
-        .courier-badge.OLXFAN { background: #002f34; color: #fff; }
+        .courier-badge.CARGUS { background: #ff9800; }
+        .courier-badge.FAN { background: #2196f3; }
+        .courier-badge.OLXFAN { background: #9c27b0; }
         .media-badge {
             font-size: 0.75rem;
             background: rgba(0, 212, 255, 0.2);
@@ -723,8 +882,10 @@
             .colet-actions { justify-content: center; width: 100%; }
             .btn-pregatit, .btn-print { flex: 1; text-align: center; }
             .courier-btn { min-width: 80px; padding: 12px; font-size: 0.9rem; }
-            .input-group input { min-width: 100%; }
             .modal-content { margin: 2% auto; padding: 15px; }
+            .scan-input-wrapper { flex-direction: column; }
+            .manual-input-wrapper { flex-direction: column; }
+            #scanInput, #manualAwb { width: 100%; }
         }
     </style>
 </head>
@@ -791,13 +952,30 @@
                 <button onclick="stopScanning()" style="margin-left:auto; padding:5px 10px; background:rgba(255,68,68,0.3); border:none; border-radius:5px; color:#fff; cursor:pointer;">Stop</button>
             </div>
 
-            <div class="input-group">
-                <input type="text" id="awb" placeholder="Scanează sau introdu AWB..." autocomplete="off">
-                <select id="manualCourier">
-                    <option value="CARGUS">CARGUS</option>
-                    <option value="FAN">FAN</option>
-                    <option value="OLXFAN">OLX FAN</option>
-                </select>
+            <!-- INPUT SEPARAT: SCANARE vs MANUAL -->
+            <div class="input-sections">
+                <!-- Secțiune SCANARE - fără tastatură -->
+                <div class="scan-input-section">
+                    <h3>📡 Scanare cu Scanner</h3>
+                    <div class="scan-input-wrapper">
+                        <input type="text" id="scanInput" inputmode="none" placeholder="Focus aici pentru scanare..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+                        <button class="btn-scan-focus" onclick="focusScanInput()">🎯 SCANEAZĂ</button>
+                    </div>
+                </div>
+                
+                <!-- Secțiune MANUAL - cu tastatură -->
+                <div class="manual-input-section">
+                    <h3>⌨️ Introducere Manuală</h3>
+                    <div class="manual-input-wrapper">
+                        <input type="text" id="manualAwb" placeholder="Introdu codul AWB..." autocomplete="off">
+                        <select id="manualCourier">
+                            <option value="CARGUS">CARGUS</option>
+                            <option value="FAN">FAN</option>
+                            <option value="OLXFAN">OLX FAN</option>
+                        </select>
+                        <button class="btn-manual-add" onclick="submitManualAwb()">➕ Adaugă</button>
+                    </div>
+                </div>
             </div>
 
             <div class="filter-buttons">

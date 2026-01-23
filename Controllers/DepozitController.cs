@@ -37,7 +37,30 @@ public class DepozitController : Controller
                 Media = a.Media.Select(m => new { m.Id, m.FileName, m.FilePath, m.MediaType }).ToList()
             })
             .ToListAsync();
-        return Json(awbs);
+
+        // Adaugă informațiile coletului pentru fiecare AWB
+        var result = new List<object>();
+        foreach (var awb in awbs)
+        {
+            var colet = await _db.AwbColete.FirstOrDefaultAsync(c => c.AwbCode == awb.Code);
+            result.Add(new
+            {
+                awb.Id,
+                awb.Code,
+                awb.Courier,
+                awb.ScannedAt,
+                awb.MediaCount,
+                awb.Media,
+                ColetInfo = colet != null ? new
+                {
+                    colet.Destinatar,
+                    colet.Observatii,
+                    colet.RambursRon
+                } : null
+            });
+        }
+
+        return Json(result);
     }
 
     // Returnează coletele PENDING care trebuie pregătite - INCLUDE CaleFisier pentru print

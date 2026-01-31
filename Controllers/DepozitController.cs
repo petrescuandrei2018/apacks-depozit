@@ -55,7 +55,9 @@ public class DepozitController : Controller
                 {
                     colet.Destinatar,
                     colet.Observatii,
-                    colet.RambursRon
+                    colet.RambursRon,
+                    colet.GreutateKg,
+                    colet.Telefon
                 } : null
             });
         }
@@ -63,7 +65,6 @@ public class DepozitController : Controller
         return Json(result);
     }
 
-    // Returnează coletele PENDING care trebuie pregătite - INCLUDE CaleFisier pentru print
     [HttpGet]
     public async Task<IActionResult> GetColeteDePregatit()
     {
@@ -82,13 +83,13 @@ public class DepozitController : Controller
                 c.GreutateKg,
                 c.DataAwb,
                 c.Status,
-                c.CaleFisier // ADĂUGAT pentru buton print
+                c.CaleFisier,
+                c.Curier
             })
             .ToListAsync();
         return Json(colete);
     }
 
-    // Marchează un colet ca PREGATIT (livrat) - manual
     [HttpPost]
     public async Task<IActionResult> MarcheazaPregatit(int id)
     {
@@ -109,14 +110,12 @@ public class DepozitController : Controller
         return Json(new { success = true });
     }
 
-    // NOU: Verifică dacă un AWB există în colete PENDING și îl marchează automat
     [HttpPost]
     public async Task<IActionResult> VerificaSiMarcheaza([FromBody] AwbRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Code))
             return Json(new { found = false });
 
-        // Caută coletul în lista de pregătit (PENDING)
         var colet = await _db.AwbColete.FirstOrDefaultAsync(c =>
             c.AwbCode == request.Code && c.Status == "PENDING");
 
@@ -147,21 +146,15 @@ public class DepozitController : Controller
         return Json(new { found = false, marcat = false });
     }
 
-    // NOU: Returnează coletele pregătite la o anumită dată
     [HttpGet]
     public async Task<IActionResult> GetColetePregatieLaData(string? data = null)
     {
         DateTime targetDate;
 
         if (string.IsNullOrEmpty(data))
-        {
             targetDate = DateTime.Today;
-        }
-        else
-        {
-            if (!DateTime.TryParse(data, out targetDate))
-                targetDate = DateTime.Today;
-        }
+        else if (!DateTime.TryParse(data, out targetDate))
+            targetDate = DateTime.Today;
 
         var startOfDay = targetDate.Date;
         var endOfDay = targetDate.Date.AddDays(1);
@@ -179,6 +172,7 @@ public class DepozitController : Controller
                 c.Telefon,
                 c.GreutateKg,
                 c.DataAwb,
+                c.Curier,
                 PregatitLa = c.UpdatedAt
             })
             .ToListAsync();
@@ -193,7 +187,6 @@ public class DepozitController : Controller
         });
     }
 
-    // NOU: Returnează datele disponibile cu colete pregătite (pentru dropdown)
     [HttpGet]
     public async Task<IActionResult> GetDateDisponibile()
     {
@@ -202,7 +195,7 @@ public class DepozitController : Controller
             .Select(c => c.UpdatedAt.Date)
             .Distinct()
             .OrderByDescending(d => d)
-            .Take(30) // Ultimele 30 de zile cu activitate
+            .Take(30)
             .ToListAsync();
 
         var result = dates.Select(d => new
@@ -212,7 +205,6 @@ public class DepozitController : Controller
             isToday = d.Date == DateTime.Today
         }).ToList();
 
-        // Adaugă data de azi dacă nu există
         if (!result.Any(r => r.isToday))
         {
             result.Insert(0, new
@@ -226,7 +218,6 @@ public class DepozitController : Controller
         return Json(result);
     }
 
-    // NOU: Revine un colet la PENDING (anulare pregătire)
     [HttpPost]
     public async Task<IActionResult> RevineLaPending(int id)
     {
@@ -236,7 +227,6 @@ public class DepozitController : Controller
         colet.Status = "PENDING";
         colet.UpdatedAt = DateTime.Now;
 
-        // Șterge și din lista de AWB-uri scanate dacă există
         var awbScanat = await _db.Awbs
             .Include(a => a.Media)
             .FirstOrDefaultAsync(a => a.Code == colet.AwbCode);
@@ -263,14 +253,12 @@ public class DepozitController : Controller
         return Json(new { success = true });
     }
 
-    // MODIFICAT: Add cu verificare duplicat - returnează eroare dacă există
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] AwbRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Code))
             return BadRequest(new { error = true, message = "Cod AWB invalid" });
 
-        // Verifică dacă AWB-ul există deja
         var existing = await _db.Awbs.FirstOrDefaultAsync(a => a.Code == request.Code);
         if (existing != null)
         {
@@ -312,7 +300,6 @@ public class DepozitController : Controller
 
         if (awb != null)
         {
-            // Verifică dacă există un colet LIVRAT cu acest AWB și îl readuce la PENDING
             var colet = await _db.AwbColete.FirstOrDefaultAsync(c => c.AwbCode == request.Code && c.Status == "LIVRAT");
             if (colet != null)
             {

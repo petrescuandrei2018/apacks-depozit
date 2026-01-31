@@ -41,21 +41,63 @@
             text-decoration: none;
             border-radius: 8px;
             font-size: 0.9rem;
+            transition: all 0.3s ease;
         }
         .nav-link:hover { background: rgba(0, 212, 255, 0.2); }
 
-        /* TEME CURIER */
-        .theme-cargus { border-left-color: #ff9800 !important; }
-        .theme-cargus .awb-code { color: #ff9800 !important; }
-        .theme-cargus .courier-badge { background: #ff9800 !important; }
+        /* ICONURI PRODUS INLINE */
+        .product-icon {
+            width: 22px;
+            height: 22px;
+            vertical-align: middle;
+            margin-left: 4px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        /* ====== COURIER BADGES ====== */
+        .courier-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #fff;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .courier-badge.CARGUS { background: linear-gradient(135deg, #d35400, #e67e22); }
+        .courier-badge.FAN { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+        .courier-badge.OLXFAN { background: linear-gradient(135deg, #7b1fa2, #ab47bc); }
+
+        /* ====== TEME CARDURI - CARGUS (portocaliu) ====== */
+        .colet-item.theme-cargus { border-left-color: #e67e22; background: rgba(230, 126, 34, 0.08); }
+        .colet-item.theme-cargus .colet-awb { color: #f39c12; }
         
-        .theme-fan { border-left-color: #2196f3 !important; }
-        .theme-fan .awb-code { color: #2196f3 !important; }
-        .theme-fan .courier-badge { background: #2196f3 !important; }
+        .pregatie-item.theme-cargus { border-left-color: #e67e22; background: rgba(230, 126, 34, 0.06); }
+        .pregatie-item.theme-cargus .pregatie-awb { color: #f39c12; }
         
-        .theme-olxfan { border-left-color: #9c27b0 !important; }
-        .theme-olxfan .awb-code { color: #9c27b0 !important; }
-        .theme-olxfan .courier-badge { background: #9c27b0 !important; }
+        .awb.theme-cargus { border-left-color: #e67e22; background: rgba(230, 126, 34, 0.08); }
+        .awb.theme-cargus .awb-code { color: #f39c12; }
+
+        /* ====== TEME CARDURI - FAN (albastru) ====== */
+        .colet-item.theme-fan { border-left-color: #1565c0; background: rgba(21, 101, 192, 0.08); }
+        .colet-item.theme-fan .colet-awb { color: #42a5f5; }
+        
+        .pregatie-item.theme-fan { border-left-color: #1565c0; background: rgba(21, 101, 192, 0.06); }
+        .pregatie-item.theme-fan .pregatie-awb { color: #42a5f5; }
+        
+        .awb.theme-fan { border-left-color: #1565c0; background: rgba(21, 101, 192, 0.08); }
+        .awb.theme-fan .awb-code { color: #42a5f5; }
+
+        /* ====== TEME CARDURI - OLXFAN (violet) ====== */
+        .colet-item.theme-olxfan { border-left-color: #7b1fa2; background: rgba(123, 31, 162, 0.08); }
+        .colet-item.theme-olxfan .colet-awb { color: #ab47bc; }
+        
+        .pregatie-item.theme-olxfan { border-left-color: #7b1fa2; background: rgba(123, 31, 162, 0.06); }
+        .pregatie-item.theme-olxfan .pregatie-awb { color: #ab47bc; }
+        
+        .awb.theme-olxfan { border-left-color: #7b1fa2; background: rgba(123, 31, 162, 0.08); }
+        .awb.theme-olxfan .awb-code { color: #ab47bc; }
 
         /* SECȚIUNEA COLETE DE PREGĂTIT */
         .colete-section {
@@ -64,7 +106,6 @@
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 25px;
-            transition: all 0.3s ease;
         }
         .colete-section h2 {
             color: #ffc107;
@@ -83,11 +124,7 @@
             font-size: 1rem;
             font-weight: bold;
         }
-        .colete-header-actions {
-            margin-left: auto;
-            display: flex;
-            gap: 10px;
-        }
+        .colete-header-actions { margin-left: auto; display: flex; gap: 10px; }
         .btn-fullscreen {
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
@@ -98,13 +135,9 @@
             font-size: 0.9rem;
             transition: all 0.2s;
         }
-        .btn-fullscreen:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        #coleteDePregatitList {
-            max-height: 400px;
-            overflow-y: auto;
-        }
+        .btn-fullscreen:hover { background: rgba(255,255,255,0.2); }
+        #coleteDePregatitList { max-height: 400px; overflow-y: auto; }
+        
         .colet-item {
             background: rgba(255,255,255,0.05);
             border-radius: 10px;
@@ -113,37 +146,13 @@
             border-left: 4px solid #ffc107;
             transition: all 0.3s ease;
         }
-        .colet-item:hover {
-            background: rgba(255,255,255,0.08);
-        }
-        .colet-item.colet-done {
-            opacity: 0;
-            transform: translateX(100px);
-        }
-        .colet-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .colet-awb {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #00ff88;
-            font-size: 1.1rem;
-        }
-        .colet-data {
-            color: #8892b0;
-            font-size: 0.85rem;
-        }
+        .colet-item:hover { filter: brightness(1.1); }
+        .colet-item.colet-done { opacity: 0; transform: translateX(100px); }
+        .colet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .colet-awb { font-family: 'Courier New', monospace; font-weight: bold; color: #00ff88; font-size: 1.1rem; display: flex; align-items: center; flex-wrap: wrap; }
+        .colet-data { color: #8892b0; font-size: 0.85rem; }
         .colet-info { margin-bottom: 10px; }
-        .colet-destinatar {
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 5px;
-        }
+        .colet-destinatar { font-weight: 600; color: #fff; margin-bottom: 5px; }
         .colet-produse {
             color: #00d4ff;
             font-size: 0.95rem;
@@ -152,22 +161,11 @@
             background: rgba(0, 212, 255, 0.1);
             border-radius: 6px;
             word-break: break-word;
+            line-height: 1.6;
         }
-        .colet-details {
-            display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: #8892b0;
-            flex-wrap: wrap;
-        }
+        .colet-details { display: flex; gap: 15px; font-size: 0.85rem; color: #8892b0; flex-wrap: wrap; }
         .colet-ramburs { color: #ffd700; font-weight: 600; }
-        .colet-actions { 
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: flex-end;
-        }
+        .colet-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
         .btn-print {
             background: rgba(0, 212, 255, 0.2);
             color: #00d4ff;
@@ -179,10 +177,7 @@
             font-size: 1.1rem;
             transition: all 0.2s;
         }
-        .btn-print:hover {
-            background: rgba(0, 212, 255, 0.3);
-            transform: scale(1.05);
-        }
+        .btn-print:hover { background: rgba(0, 212, 255, 0.3); transform: scale(1.05); }
         .btn-pregatit {
             background: linear-gradient(135deg, #00ff88, #00d4ff);
             color: #1a1a2e;
@@ -194,24 +189,13 @@
             font-size: 1rem;
             transition: all 0.2s;
         }
-        .btn-pregatit:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
-        }
-        .empty-colete {
-            text-align: center;
-            padding: 30px;
-            color: #00ff88;
-            font-size: 1.1rem;
-        }
+        .btn-pregatit:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3); }
+        .empty-colete { text-align: center; padding: 30px; color: #00ff88; font-size: 1.1rem; }
 
         /* FULLSCREEN MODE */
         .fullscreen-mode {
             position: fixed !important;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             z-index: 9999;
             background: #1a1a2e;
             margin: 0 !important;
@@ -220,28 +204,14 @@
             padding: 20px;
             border: none !important;
         }
-        .fullscreen-mode #coleteDePregatitList {
-            max-height: calc(100vh - 100px);
-        }
-        .fullscreen-mode .colet-item {
-            padding: 20px;
-        }
-        .fullscreen-mode .colet-awb {
-            font-size: 1.4rem;
-        }
-        .fullscreen-mode .colet-produse {
-            font-size: 1.1rem;
-        }
-        .fullscreen-mode .btn-pregatit,
-        .fullscreen-mode .btn-print {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-        }
-        body.fullscreen-active {
-            overflow: hidden;
-        }
+        .fullscreen-mode #coleteDePregatitList { max-height: calc(100vh - 100px); }
+        .fullscreen-mode .colet-item { padding: 20px; }
+        .fullscreen-mode .colet-awb { font-size: 1.4rem; }
+        .fullscreen-mode .colet-produse { font-size: 1.1rem; }
+        .fullscreen-mode .btn-pregatit, .fullscreen-mode .btn-print { padding: 15px 30px; font-size: 1.2rem; }
+        body.fullscreen-active { overflow: hidden; }
 
-        /* SECȚIUNEA ISTORIC PREGĂTIRI */
+        /* SECȚIUNEA ISTORIC */
         .istoric-section {
             background: rgba(0, 255, 136, 0.05);
             border: 2px solid rgba(0, 255, 136, 0.2);
@@ -249,21 +219,8 @@
             padding: 20px;
             margin-bottom: 25px;
         }
-        .istoric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .istoric-header h2 {
-            color: #00ff88;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .istoric-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .istoric-header h2 { color: #00ff88; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         .toggle-btn {
             background: rgba(0, 255, 136, 0.2);
             color: #00ff88;
@@ -273,19 +230,9 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-        .toggle-btn:hover {
-            background: rgba(0, 255, 136, 0.3);
-        }
-        .date-selector {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .date-selector label {
-            color: #8892b0;
-            font-size: 0.9rem;
-        }
+        .toggle-btn:hover { background: rgba(0, 255, 136, 0.3); }
+        .date-selector { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .date-selector label { color: #8892b0; font-size: 0.9rem; }
         .date-selector select {
             padding: 8px 15px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -295,76 +242,29 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
-        .date-selector select:focus {
-            outline: none;
-            border-color: #00ff88;
-        }
-        #pregateStats {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .stat-item {
-            color: #8892b0;
-            font-size: 0.9rem;
-        }
+        .date-selector select:focus { outline: none; border-color: #00ff88; }
+        #pregateStats { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat-item { color: #8892b0; font-size: 0.9rem; }
         .stat-item:first-child { color: #00d4ff; font-weight: 600; }
         .stat-item:last-child { color: #ffd700; font-weight: 600; }
+        #coletePregateList { max-height: 300px; overflow-y: auto; }
         
-        #coletePregateList {
-            max-height: 300px;
-            overflow-y: auto;
-        }
         .pregatie-item {
             background: rgba(255,255,255,0.03);
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 8px;
             border-left: 3px solid #00ff88;
+            transition: all 0.3s ease;
         }
-        .pregatie-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .pregatie-awb {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #00ff88;
-        }
-        .pregatie-ora {
-            color: #666;
-            font-size: 0.8rem;
-        }
-        .pregatie-info {
-            display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: #ccc;
-            flex-wrap: wrap;
-        }
-        .pregatie-produse {
-            color: #00d4ff;
-            padding: 4px 8px;
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 4px;
-        }
-        .pregatie-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .pregatie-ramburs {
-            color: #ffd700;
-            font-size: 0.85rem;
-        }
+        .pregatie-item:hover { filter: brightness(1.1); }
+        .pregatie-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 10px; }
+        .pregatie-awb { font-family: 'Courier New', monospace; font-weight: bold; color: #00ff88; display: flex; align-items: center; flex-wrap: wrap; }
+        .pregatie-ora { color: #666; font-size: 0.8rem; }
+        .pregatie-info { display: flex; gap: 15px; font-size: 0.85rem; color: #ccc; flex-wrap: wrap; }
+        .pregatie-produse { color: #00d4ff; padding: 4px 8px; background: rgba(0, 212, 255, 0.1); border-radius: 4px; line-height: 1.6; }
+        .pregatie-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 10px; }
+        .pregatie-ramburs { color: #ffd700; font-size: 0.85rem; }
         .btn-anuleaza {
             background: rgba(255, 68, 68, 0.2);
             color: #ff6b6b;
@@ -375,14 +275,8 @@
             font-size: 0.8rem;
             transition: all 0.2s;
         }
-        .btn-anuleaza:hover {
-            background: rgba(255, 68, 68, 0.3);
-        }
-        .empty-pregatie {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
+        .btn-anuleaza:hover { background: rgba(255, 68, 68, 0.3); }
+        .empty-pregatie { text-align: center; padding: 20px; color: #666; }
 
         /* SECȚIUNEA SCANARE */
         .scan-section {
@@ -391,18 +285,9 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        .scan-section h2 {
-            color: #00d4ff;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-        }
+        .scan-section h2 { color: #00d4ff; font-size: 1.2rem; margin-bottom: 15px; }
         
-        .courier-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
+        .courier-buttons { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .courier-btn {
             flex: 1;
             min-width: 100px;
@@ -417,39 +302,16 @@
             transition: all 0.2s;
         }
         .courier-btn:hover { border-color: #00d4ff; }
-        .courier-btn.active {
-            transform: scale(0.98);
-        }
+        .courier-btn.active { transform: scale(0.98); }
         
-        /* Buton CARGUS - portocaliu */
-        #btnCargus {
-            border-color: rgba(255, 152, 0, 0.5);
-            color: #ff9800;
-        }
-        #btnCargus:hover, #btnCargus.active {
-            background: rgba(255, 152, 0, 0.2);
-            border-color: #ff9800;
-        }
+        #btnCargus { border-color: rgba(230, 126, 34, 0.5); color: #e67e22; }
+        #btnCargus:hover, #btnCargus.active { background: rgba(230, 126, 34, 0.15); border-color: #e67e22; }
         
-        /* Buton FAN - albastru */
-        #btnFan {
-            border-color: rgba(33, 150, 243, 0.5);
-            color: #2196f3;
-        }
-        #btnFan:hover, #btnFan.active {
-            background: rgba(33, 150, 243, 0.2);
-            border-color: #2196f3;
-        }
+        #btnFan { border-color: rgba(21, 101, 192, 0.5); color: #42a5f5; }
+        #btnFan:hover, #btnFan.active { background: rgba(21, 101, 192, 0.15); border-color: #42a5f5; }
         
-        /* Buton OLX FAN - mov */
-        #btnOlxFan {
-            border-color: rgba(156, 39, 176, 0.5);
-            color: #9c27b0;
-        }
-        #btnOlxFan:hover, #btnOlxFan.active {
-            background: rgba(156, 39, 176, 0.2);
-            border-color: #9c27b0;
-        }
+        #btnOlxFan { border-color: rgba(123, 31, 162, 0.5); color: #ab47bc; }
+        #btnOlxFan:hover, #btnOlxFan.active { background: rgba(123, 31, 162, 0.15); border-color: #ab47bc; }
 
         .active-scanner {
             display: none;
@@ -473,35 +335,51 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
 
-        /* INPUT SEPARAT: SCANARE vs MANUAL */
-        .input-sections {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .toggle-scan-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            color: #00ff88;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             margin-bottom: 15px;
         }
-        
+        .toggle-scan-btn:hover { background: rgba(0, 255, 136, 0.2); }
+        .toggle-scan-btn.active { background: rgba(0, 255, 136, 0.2); }
+
         .scan-input-section {
-            background: rgba(0, 255, 136, 0.05);
             border: 2px solid rgba(0, 255, 136, 0.3);
             border-radius: 12px;
             padding: 15px;
+            margin-bottom: 15px;
+            display: none;
         }
-        .scan-input-section h3 {
-            color: #00ff88;
+
+        .mode-toggle-wrapper { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-toggle-btn {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #fff;
             font-size: 0.9rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .scan-input-wrapper {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .mode-toggle-btn:hover { background: rgba(255,255,255,0.1); }
+        .mode-toggle-btn.active { background: rgba(0, 255, 136, 0.2); border-color: #00ff88; color: #00ff88; }
+
+        .scanner-mode-section h3 { color: #00ff88; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .scan-input-wrapper { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         #scanInput {
             flex: 1;
+            min-width: 200px;
             padding: 15px;
             border: 2px solid rgba(0, 255, 136, 0.3);
             border-radius: 10px;
@@ -509,12 +387,11 @@
             color: #00ff88;
             font-size: 1.1rem;
             font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
         }
-        #scanInput:focus {
-            outline: none;
-            border-color: #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
+        #scanInput:focus { outline: none; border-color: #00ff88; box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+        #scanInput.scanner-active { border-color: #00ff88; background: rgba(0, 255, 136, 0.12); box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
+        #scanInput::placeholder { color: rgba(0, 255, 136, 0.5); font-size: 0.85rem; }
         .btn-scan-focus {
             padding: 15px 25px;
             background: linear-gradient(135deg, #00ff88, #00d4ff);
@@ -525,73 +402,51 @@
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
-        .btn-scan-focus:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
-        }
-        
-        .manual-input-section {
-            background: rgba(0, 212, 255, 0.05);
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-        }
-        .manual-input-section h3 {
-            color: #00d4ff;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .manual-input-wrapper {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .btn-scan-focus:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3); }
+
+        .manual-mode-section { display: none; }
+        .manual-mode-section h3 { color: #00d4ff; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .manual-input-wrapper { display: flex; gap: 10px; flex-wrap: wrap; }
         #manualAwb {
             flex: 1;
             min-width: 200px;
-            padding: 12px 15px;
+            padding: 15px;
             border: 2px solid rgba(0, 212, 255, 0.3);
             border-radius: 10px;
             background: rgba(0, 212, 255, 0.05);
             color: #fff;
             font-size: 1rem;
+            font-family: 'Courier New', monospace;
         }
-        #manualAwb:focus {
-            outline: none;
-            border-color: #00d4ff;
-        }
-        #manualCourier {
-            padding: 12px 15px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            font-size: 0.9rem;
-        }
+        #manualAwb:focus { outline: none; border-color: #00d4ff; box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+        #manualAwb::placeholder { color: rgba(255,255,255,0.4); }
         .btn-manual-add {
-            padding: 12px 20px;
-            background: rgba(0, 212, 255, 0.2);
-            color: #00d4ff;
-            border: 2px solid rgba(0, 212, 255, 0.3);
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #1a1a2e;
+            border: none;
             border-radius: 10px;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
-        .btn-manual-add:hover {
-            background: rgba(0, 212, 255, 0.3);
-        }
+        .btn-manual-add:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3); }
 
         .filter-buttons {
             display: flex;
             gap: 8px;
             margin-bottom: 15px;
-            flex-wrap: wrap;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 5px;
         }
+        .filter-buttons::-webkit-scrollbar { display: none; }
         .filter-btn {
             padding: 8px 15px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -600,12 +455,9 @@
             color: #fff;
             cursor: pointer;
             font-size: 0.85rem;
+            flex-shrink: 0;
         }
-        .filter-btn.active {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: #00d4ff;
-            color: #00d4ff;
-        }
+        .filter-btn.active { background: rgba(0, 212, 255, 0.2); border-color: #00d4ff; color: #00d4ff; }
 
         .stats {
             display: flex;
@@ -619,13 +471,7 @@
         }
         .stats span { color: #8892b0; }
         .action-btns { display: flex; gap: 10px; }
-        .btn-action {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
+        .btn-action { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
         .btn-copy { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
         .btn-clear { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
 
@@ -635,14 +481,10 @@
             border-radius: 12px;
             padding: 15px;
             border-left: 4px solid #00d4ff;
+            transition: all 0.3s ease;
         }
-        .awb-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .awb:hover { filter: brightness(1.1); }
+        .awb-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
         .awb-info { flex: 1; min-width: 200px; }
         .awb-code {
             font-family: 'Courier New', monospace;
@@ -654,8 +496,7 @@
             gap: 8px;
             flex-wrap: wrap;
         }
-        
-        /* Info colet în AWB */
+
         .awb-colet-info {
             margin-top: 8px;
             padding: 10px;
@@ -665,156 +506,56 @@
             flex-direction: column;
             gap: 5px;
         }
-        .awb-destinatar {
-            color: #fff;
-            font-weight: 600;
-        }
-        .awb-produse {
-            color: #00d4ff;
-            font-size: 0.9rem;
-            padding: 5px 8px;
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 4px;
-        }
-        .awb-pret {
-            color: #ffd700;
-            font-weight: bold;
-        }
-        
-        .courier-badge {
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-            color: #fff;
-        }
-        .courier-badge.CARGUS { background: #ff9800; }
-        .courier-badge.FAN { background: #2196f3; }
-        .courier-badge.OLXFAN { background: #9c27b0; }
-        .media-badge {
-            font-size: 0.75rem;
-            background: rgba(0, 212, 255, 0.2);
-            color: #00d4ff;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
+        .awb-destinatar { color: #fff; font-weight: 600; }
+        .awb-produse { color: #00d4ff; font-size: 0.9rem; padding: 5px 8px; background: rgba(0, 212, 255, 0.1); border-radius: 4px; line-height: 1.6; }
+        .awb-pret { color: #ffd700; font-weight: bold; }
+        .media-badge { font-size: 0.75rem; background: rgba(0, 212, 255, 0.2); color: #00d4ff; padding: 2px 8px; border-radius: 10px; }
         .awb-date { color: #666; font-size: 0.8rem; margin-top: 5px; }
         .awb-actions { display: flex; gap: 8px; }
-        .awb-actions button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
+        .awb-actions button { padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
         .btn-media { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
         .btn-delete { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
+        .awb-media-preview { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .awb-media-preview img, .awb-media-preview video { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; }
 
-        .awb-media-preview {
+        .awb-colet-details {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 15px;
+            margin-top: 5px;
             flex-wrap: wrap;
         }
-        .awb-media-preview img, .awb-media-preview video {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-            cursor: pointer;
+
+        .awb-greutate {
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+
+        .colet-greutate {
+            color: #8892b0;
+            font-size: 0.85rem;
         }
 
         /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-        }
-        .modal-content {
-            background: #1a1a2e;
-            margin: 5% auto;
-            padding: 25px;
-            border-radius: 15px;
-            width: 95%;
-            max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: #1a1a2e; margin: 5% auto; padding: 25px; border-radius: 15px; width: 95%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-header h3 { color: #00d4ff; }
-        .close-btn {
-            background: none;
-            border: none;
-            color: #666;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        .media-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .media-actions button {
-            flex: 1;
-            min-width: 100px;
-            padding: 15px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: transparent;
-            color: #fff;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
+        .close-btn { background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; }
+        .media-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .media-actions button { flex: 1; min-width: 100px; padding: 15px; border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; background: transparent; color: #fff; font-size: 0.9rem; cursor: pointer; }
         .media-actions button:hover { border-color: #00d4ff; }
-        #uploadStatus {
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-        }
+        #uploadStatus { padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; }
         #uploadStatus.success { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
         #uploadStatus.error { background: rgba(255, 68, 68, 0.2); color: #ff6b6b; }
         #uploadStatus.loading { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
         #existingMedia { margin-top: 15px; }
-        .existing-media-item {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
-        }
-        .existing-media-item img, .existing-media-item video {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .delete-media {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 24px;
-            height: 24px;
-            background: #ff4444;
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
+        .existing-media-item { display: inline-block; position: relative; margin: 5px; }
+        .existing-media-item img, .existing-media-item video { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+        .delete-media { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; background: #ff4444; color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 0.8rem; }
 
-        /* Auto-match notification */
+        /* Notifications */
         .auto-match-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+            position: fixed; top: 20px; right: 20px;
             background: linear-gradient(135deg, #00ff88, #00d4ff);
             color: #1a1a2e;
             padding: 15px 20px;
@@ -824,15 +565,9 @@
             animation: slideIn 0.3s ease;
             max-width: 90%;
         }
-        .auto-match-notification.fade-out {
-            animation: slideOut 0.3s ease forwards;
-        }
-        
-        /* Duplicate warning notification */
+        .auto-match-notification.fade-out { animation: slideOut 0.3s ease forwards; }
         .duplicate-warning {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+            position: fixed; top: 20px; right: 20px;
             background: linear-gradient(135deg, #ff6b6b, #ff4444);
             color: #fff;
             padding: 15px 20px;
@@ -842,33 +577,13 @@
             animation: slideIn 0.3s ease;
             max-width: 90%;
         }
-        .duplicate-warning.fade-out {
-            animation: slideOut 0.3s ease forwards;
-        }
-        
-        @@keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @@keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .notification-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .notification-icon {
-            font-size: 1.5rem;
-        }
-        .notification-text strong {
-            display: block;
-            margin-bottom: 3px;
-        }
-        .notification-text small {
-            opacity: 0.8;
-        }
+        .duplicate-warning.fade-out { animation: slideOut 0.3s ease forwards; }
+        @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @@keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        .notification-content { display: flex; align-items: center; gap: 12px; }
+        .notification-icon { font-size: 1.5rem; }
+        .notification-text strong { display: block; margin-bottom: 3px; }
+        .notification-text small { opacity: 0.8; }
 
         .hidden-inputs { display: none; }
 
@@ -883,9 +598,11 @@
             .btn-pregatit, .btn-print { flex: 1; text-align: center; }
             .courier-btn { min-width: 80px; padding: 12px; font-size: 0.9rem; }
             .modal-content { margin: 2% auto; padding: 15px; }
-            .scan-input-wrapper { flex-direction: column; }
-            .manual-input-wrapper { flex-direction: column; }
+            .scan-input-wrapper, .manual-input-wrapper { flex-direction: column; }
             #scanInput, #manualAwb { width: 100%; }
+            .btn-scan-focus, .btn-manual-add { width: 100%; }
+            .product-icon { width: 18px; height: 18px; }
+            .courier-badge { font-size: 0.6rem; padding: 2px 6px; }
         }
     </style>
 </head>
@@ -899,13 +616,12 @@
             </nav>
         </header>
 
-        <!-- SECȚIUNEA COLETE DE PREGĂTIT -->
         <section class="colete-section">
             <h2>
                 📋 Colete de Pregătit
                 <span class="colete-count" id="coleteDePregatitCount">0</span>
                 <div class="colete-header-actions">
-                    <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()" title="Deschide în fullscreen">⛶ Fullscreen</button>
+                    <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()">⛶ Fullscreen</button>
                 </div>
             </h2>
             <div id="coleteDePregatitList">
@@ -913,13 +629,11 @@
             </div>
         </section>
 
-        <!-- SECȚIUNEA ISTORIC PREGĂTIRI -->
         <section class="istoric-section">
             <div class="istoric-header">
                 <h2>✅ Colete Pregătite</h2>
                 <button class="toggle-btn" id="toggleIstoricBtn" onclick="toggleIstoricSection()">▶ Vezi coletele pregătite</button>
             </div>
-            
             <div id="istoricSection" style="display: none;">
                 <div class="date-selector">
                     <label>📅 Selectează data:</label>
@@ -927,16 +641,13 @@
                         <option value="">Se încarcă...</option>
                     </select>
                 </div>
-                
                 <div id="pregateStats"></div>
-                
                 <div id="coletePregateList">
-                    <div class="empty-pregatie">Selectează o dată pentru a vedea coletele pregătite.</div>
+                    <div class="empty-pregatie">Selectează o dată.</div>
                 </div>
             </div>
         </section>
 
-        <!-- SECȚIUNEA SCANARE -->
         <section class="scan-section">
             <h2>📷 Scanare AWB</h2>
             
@@ -952,27 +663,26 @@
                 <button onclick="stopScanning()" style="margin-left:auto; padding:5px 10px; background:rgba(255,68,68,0.3); border:none; border-radius:5px; color:#fff; cursor:pointer;">Stop</button>
             </div>
 
-            <!-- INPUT SEPARAT: SCANARE vs MANUAL -->
-            <div class="input-sections">
-                <!-- Secțiune SCANARE - fără tastatură -->
-                <div class="scan-input-section">
+            <button class="toggle-scan-btn" id="toggleScanBtn" onclick="toggleScanSection()">📡 Arată Scanare</button>
+
+            <div class="scan-input-section" id="scanInputSection">
+                <div class="mode-toggle-wrapper">
+                    <button class="mode-toggle-btn active" id="btnModeScanner" onclick="switchInputMode('scanner')">📡 Scanner</button>
+                    <button class="mode-toggle-btn" id="btnModeManual" onclick="switchInputMode('manual')">⌨️ Manual</button>
+                </div>
+
+                <div class="scanner-mode-section" id="scannerModeSection">
                     <h3>📡 Scanare cu Scanner</h3>
                     <div class="scan-input-wrapper">
-                        <input type="text" id="scanInput" inputmode="none" placeholder="Focus aici pentru scanare..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
+                        <input type="text" id="scanInput" inputmode="none" placeholder="Apasă Scanează" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');">
                         <button class="btn-scan-focus" onclick="focusScanInput()">🎯 SCANEAZĂ</button>
                     </div>
                 </div>
-                
-                <!-- Secțiune MANUAL - cu tastatură -->
-                <div class="manual-input-section">
+
+                <div class="manual-mode-section" id="manualModeSection">
                     <h3>⌨️ Introducere Manuală</h3>
                     <div class="manual-input-wrapper">
                         <input type="text" id="manualAwb" placeholder="Introdu codul AWB..." autocomplete="off">
-                        <select id="manualCourier">
-                            <option value="CARGUS">CARGUS</option>
-                            <option value="FAN">FAN</option>
-                            <option value="OLXFAN">OLX FAN</option>
-                        </select>
                         <button class="btn-manual-add" onclick="submitManualAwb()">➕ Adaugă</button>
                     </div>
                 </div>
@@ -997,7 +707,6 @@
         </section>
     </div>
 
-    <!-- Modal Media -->
     <div id="mediaModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1005,13 +714,11 @@
                 <button class="close-btn" onclick="closeModal()">×</button>
             </div>
             <p id="mediaCount" style="color:#666; margin-bottom:15px;"></p>
-            
             <div class="media-actions">
                 <button onclick="captureMedia('image')">📷 Poză</button>
                 <button onclick="captureMedia('video')">🎥 Video</button>
                 <button onclick="uploadFromGallery()">📁 Galerie</button>
             </div>
-            
             <div id="uploadStatus"></div>
             <div id="existingMedia"></div>
         </div>
@@ -1024,5 +731,7 @@
     </div>
 
     <script src="/js/scanner.js"></script>
+    <script src="/js/cargus-tracking.js"></script>
+
 </body>
 </html>

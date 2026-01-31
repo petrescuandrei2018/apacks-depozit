@@ -1,4 +1,6 @@
 ﻿using Apacks.Depozit.Data;
+using Apacks.Depozit.Models;
+using Apacks.Depozit.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,16 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+
+builder.Services.Configure<CargusApiConfig>(
+    builder.Configuration.GetSection("CargusApi"));
+
+builder.Services.AddHttpClient<ICargusApiService, CargusApiService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 
 var app = builder.Build();
 

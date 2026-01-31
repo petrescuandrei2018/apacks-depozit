@@ -5,69 +5,112 @@ let isScanning = false;
 let currentCourier = null;
 let currentAwbId = null;
 let currentFilter = '';
+let scannerMode = 'scanner';
 
-// Lista colete de pregătit
 let coleteDePregatit = [];
-
-// Colete pregătite (istoric)
 let coletePregatie = [];
 let selectedDate = '';
 
-// Istoric print-uri (localStorage)
 let printHistory = JSON.parse(localStorage.getItem('printHistory') || '{}');
 
-// Iconuri pentru produse
-const productIcons = {
-    'perie': '🪥',
-    'cleste': '🦞',
-    'cocos': '🥥',
-    'carbuni rosii': '🔴',
-    'rosii': '🔴',
-    'lana lemn': '🧶',
-    'kit lemne': '🪵',
-    'lemne': '🪵',
-    'cana': '☕'
+const productImages = {
+    'perie': 'https://apacks.b-cdn.net/accesorii-intro-perie.webp',
+    'cleste': 'https://apacks.b-cdn.net/accesorii-intro-cleste.webp',
+    'lana': 'https://apacks.b-cdn.net/lana-cerc.webp',
+    'lemne': 'https://apacks.b-cdn.net/accesorii-intro-lemne.webp',
+    'lemn': 'https://apacks.b-cdn.net/accesorii-intro-lemne.webp',
+    'cocos': 'https://apacks.b-cdn.net/cocos3kg.webp',
+    'rosii': 'https://apacks.b-cdn.net/carbuniBrichete3KGMain.webp',
+    'cana': 'https://apacks.b-cdn.net/accesorii-intro-cana.webp'
 };
-
-function getProductIcon(text) {
-    if (!text) return '';
-    const lowerText = text.toLowerCase();
-    for (const [keyword, icon] of Object.entries(productIcons)) {
-        if (lowerText.includes(keyword)) {
-            return icon + ' ';
-        }
-    }
-    return '📦 ';
-}
 
 function formatProductsWithIcons(text) {
     if (!text) return '-';
     let result = text;
-    const lowerText = text.toLowerCase();
-
-    // Adaugă iconuri la început bazat pe conținut
-    let icons = [];
-    if (lowerText.includes('perie')) icons.push('🪥');
-    if (lowerText.includes('cleste')) icons.push('🦞');
-    if (lowerText.includes('cocos')) icons.push('🥥');
-    if (lowerText.includes('carbuni') && lowerText.includes('rosii')) icons.push('🔴');
-    if (lowerText.includes('lana') && lowerText.includes('lemn')) icons.push('🧶');
-    if (lowerText.includes('kit') && lowerText.includes('lemn')) icons.push('🪵');
-    if (lowerText.includes('cana')) icons.push('☕');
-
-    if (icons.length > 0) {
-        return icons.join(' ') + ' ' + result;
+    for (const [keyword, imgUrl] of Object.entries(productImages)) {
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        result = result.replace(regex, `$1<img src="${imgUrl}" class="product-icon" alt="${keyword}">`);
     }
-    return '📦 ' + result;
+    return result;
 }
 
-// FUNCȚIE CENTRALIZATĂ: Refresh toate cele 3 secțiuni
+function detectCourierFromAwb(awbCode) {
+    if (!awbCode) return 'CARGUS';
+    if (awbCode.startsWith('117')) return 'CARGUS';
+    if (awbCode.startsWith('2') || awbCode.startsWith('3')) return 'FAN';
+    return 'CARGUS';
+}
+
+function getCourierLabel(courier) {
+    return { 'CARGUS': 'CARGUS', 'FAN': 'FAN', 'OLXFAN': 'OLX FAN' }[courier] || courier;
+}
+
+function getCourierThemeClass(courier) {
+    return { 'CARGUS': 'theme-cargus', 'FAN': 'theme-fan', 'OLXFAN': 'theme-olxfan' }[courier] || 'theme-cargus';
+}
+
 async function refreshAll() {
     await Promise.all([
         loadAwbs(),
         loadColeteDePregatit(),
         loadColetePregatie(selectedDate)
     ]);
+    await verificaMatchuri();
+}
+
+async function verificaMatchuri() {
+    if (coleteDePregatit.length === 0 || allAwbs.length === 0) return;
+    for (const colet of coleteDePregatit) {
+        const awbScanat = allAwbs.find(a => a.code === colet.awbCode);
+        if (awbScanat) {
+            console.log(`Match găsit: ${colet.awbCode}`);
+            await verificaSiMarcheazaAutomat(colet.awbCode);
+        }
+    }
+}
+
+function toggleScanSection() {
+    const section = document.getElementById('scanInputSection');
+    const btn = document.getElementById('toggleScanBtn');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        btn.innerHTML = '▼ Ascunde Scanare';
+        btn.classList.add('active');
+    } else {
+        section.style.display = 'none';
+        btn.innerHTML = '📡 Arată Scanare';
+        btn.classList.remove('active');
+    }
+}
+
+function switchInputMode(mode) {
+    scannerMode = mode;
+    const scannerSection = document.getElementById('scannerModeSection');
+    const manualSection = document.getElementById('manualModeSection');
+    const btnScanner = document.getElementById('btnModeScanner');
+    const btnManual = document.getElementById('btnModeManual');
+
+    if (mode === 'scanner') {
+        scannerSection.style.display = 'block';
+        manualSection.style.display = 'none';
+        btnScanner.classList.add('active');
+        btnManual.classList.remove('active');
+    } else {
+        scannerSection.style.display = 'none';
+        manualSection.style.display = 'block';
+        btnScanner.classList.remove('active');
+        btnManual.classList.add('active');
+        document.getElementById('manualAwb').focus();
+    }
+}
+
+function focusScanInput() {
+    const scanInput = document.getElementById('scanInput');
+    scanInput.setAttribute('inputmode', 'none');
+    scanInput.placeholder = 'Ați selectat scannerul!';
+    scanInput.classList.add('scanner-active');
+    scanInput.focus();
+    scanInput.value = '';
 }
 
 function startScanning(courier) {
@@ -75,7 +118,6 @@ function startScanning(courier) {
     currentCourier = courier;
 
     document.querySelectorAll('.courier-btn').forEach(btn => btn.classList.remove('active'));
-
     const btnId = courier === 'CARGUS' ? 'btnCargus' : courier === 'FAN' ? 'btnFan' : 'btnOlxFan';
     document.getElementById(btnId).classList.add('active');
 
@@ -83,12 +125,13 @@ function startScanning(courier) {
     document.getElementById('activeCourierLabel').textContent = `Scanare activă: ${label}`;
     document.getElementById('activeScanner').style.display = 'flex';
 
-    // Focus pe input-ul invizibil pentru scanare (fără tastatură)
-    const scanInput = document.getElementById('scanInput');
-    scanInput.focus();
-    // Previne tastatura pe mobil
-    scanInput.setAttribute('readonly', 'readonly');
-    setTimeout(() => scanInput.removeAttribute('readonly'), 100);
+    const section = document.getElementById('scanInputSection');
+    const btn = document.getElementById('toggleScanBtn');
+    section.style.display = 'block';
+    btn.innerHTML = '▼ Ascunde Scanare';
+    btn.classList.add('active');
+
+    if (scannerMode === 'scanner') focusScanInput();
 }
 
 function stopScanning() {
@@ -96,18 +139,17 @@ function stopScanning() {
     currentCourier = null;
     document.querySelectorAll('.courier-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('activeScanner').style.display = 'none';
+
+    const scanInput = document.getElementById('scanInput');
+    scanInput.placeholder = 'Apasă Scanează';
+    scanInput.classList.remove('scanner-active');
 }
 
 function filterBy(courier) {
     currentFilter = courier;
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
-
-    if (courier === '') {
-        awbs = [...allAwbs];
-    } else {
-        awbs = allAwbs.filter(a => a.courier === courier);
-    }
+    awbs = courier === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === courier);
     render();
 }
 
@@ -115,13 +157,7 @@ async function loadAwbs() {
     try {
         const res = await fetch('/Depozit/GetAll');
         allAwbs = await res.json();
-
-        if (currentFilter === '') {
-            awbs = [...allAwbs];
-        } else {
-            awbs = allAwbs.filter(a => a.courier === currentFilter);
-        }
-
+        awbs = currentFilter === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === currentFilter);
         if (allAwbs.length !== lastCount) {
             lastCount = allAwbs.length;
             render();
@@ -131,7 +167,6 @@ async function loadAwbs() {
     }
 }
 
-// Încarcă coletele de pregătit
 async function loadColeteDePregatit() {
     try {
         const res = await fetch('/Depozit/GetColeteDePregatit');
@@ -142,11 +177,9 @@ async function loadColeteDePregatit() {
     }
 }
 
-// Render lista colete de pregătit
 function renderColeteDePregatit() {
     const container = document.getElementById('coleteDePregatitList');
     const countEl = document.getElementById('coleteDePregatitCount');
-
     if (!container) return;
 
     countEl.textContent = coleteDePregatit.length;
@@ -156,10 +189,16 @@ function renderColeteDePregatit() {
         return;
     }
 
-    container.innerHTML = coleteDePregatit.map(c => `
-        <div class="colet-item" id="colet-${c.id}">
+    container.innerHTML = coleteDePregatit.map(c => {
+        const courier = c.curier || detectCourierFromAwb(c.awbCode);
+        const themeClass = getCourierThemeClass(courier);
+        return `
+        <div class="colet-item ${themeClass}" id="colet-${c.id}" data-awb="${c.awbCode}">
             <div class="colet-header">
-                <span class="colet-awb">${c.awbCode}</span>
+                <span class="colet-awb">
+                    ${c.awbCode}
+                    <span class="courier-badge ${courier}">${getCourierLabel(courier)}</span>
+                </span>
                 <span class="colet-data">${c.dataAwb || '-'}</span>
             </div>
             <div class="colet-info">
@@ -175,78 +214,42 @@ function renderColeteDePregatit() {
                 <button class="btn-pregatit" onclick="marcheazaPregatit(${c.id})">✓ Pregătit</button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
-// Funcție pentru print AWB cu avertizare la duplicate
 function printAwb(awbCode, caleFisier) {
     const now = new Date();
     const key = `print_${awbCode}`;
-
     if (printHistory[key]) {
         const lastPrint = new Date(printHistory[key]);
-        const formatted = lastPrint.toLocaleString('ro-RO', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        if (!confirm(`⚠️ Ați mai apăsat pe PRINT pentru acest AWB!\n\nUltima dată: ${formatted}\n\nContinuați cu printarea?`)) {
-            return;
-        }
+        const formatted = lastPrint.toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (!confirm(`⚠️ Ați mai apăsat pe PRINT pentru acest AWB!\n\nUltima dată: ${formatted}\n\nContinuați cu printarea?`)) return;
     }
-
-    // Salvează în istoric
     printHistory[key] = now.toISOString();
     localStorage.setItem('printHistory', JSON.stringify(printHistory));
-
-    // Deschide PDF-ul pentru print
     const printWindow = window.open(caleFisier, '_blank');
-    if (printWindow) {
-        printWindow.onload = function () {
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
-        };
-    }
+    if (printWindow) printWindow.onload = function () { setTimeout(() => printWindow.print(), 500); };
 }
 
-// Funcție pentru toggle fullscreen pe secțiunea colete
 function toggleFullscreen() {
     const section = document.querySelector('.colete-section');
     const btn = document.getElementById('btnFullscreen');
-
     section.classList.toggle('fullscreen-mode');
     document.body.classList.toggle('fullscreen-active');
-
-    if (section.classList.contains('fullscreen-mode')) {
-        btn.innerHTML = '✕ Închide';
-        btn.title = 'Ieși din fullscreen';
-    } else {
-        btn.innerHTML = '⛶ Fullscreen';
-        btn.title = 'Deschide în fullscreen';
-    }
+    btn.innerHTML = section.classList.contains('fullscreen-mode') ? '✕ Închide' : '⛶ Fullscreen';
 }
 
-// Marchează colet ca pregătit (manual)
 async function marcheazaPregatit(id) {
     try {
         const res = await fetch(`/Depozit/MarcheazaPregatit?id=${id}`, { method: 'POST' });
         if (res.ok) {
             const el = document.getElementById(`colet-${id}`);
-            if (el) {
-                el.classList.add('colet-done');
-            }
+            if (el) el.classList.add('colet-done');
             setTimeout(() => refreshAll(), 300);
         }
-    } catch (e) {
-        console.error('Eroare:', e);
-    }
+    } catch (e) { console.error('Eroare:', e); }
 }
 
-// NOU: Verifică și marchează automat când se scanează
 async function verificaSiMarcheazaAutomat(code) {
     try {
         const res = await fetch('/Depozit/VerificaSiMarcheaza', {
@@ -255,78 +258,43 @@ async function verificaSiMarcheazaAutomat(code) {
             body: JSON.stringify({ code })
         });
         const result = await res.json();
-
         if (result.found && result.marcat) {
-            // Afișează notificare de succes
             showAutoMatchNotification(result);
-            // Refresh toate listele
-            refreshAll();
+            const coletEl = document.querySelector(`.colet-item[data-awb="${code}"]`);
+            if (coletEl) coletEl.classList.add('colet-done');
+            setTimeout(() => refreshAll(), 500);
         }
-
         return result;
-    } catch (e) {
-        console.error('Eroare la verificare:', e);
-        return { found: false };
-    }
+    } catch (e) { console.error('Eroare la verificare:', e); return { found: false }; }
 }
 
-// NOU: Notificare când un AWB a fost găsit și marcat automat
 function showAutoMatchNotification(result) {
     const notification = document.createElement('div');
     notification.className = 'auto-match-notification';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">✅</span>
-            <div class="notification-text">
-                <strong>Colet marcat automat!</strong>
-                <div>${result.awbCode} - ${result.destinatar}</div>
-                <small>${result.observatii || ''}</small>
-            </div>
-        </div>
-    `;
+    notification.innerHTML = `<div class="notification-content"><span class="notification-icon">✅</span><div class="notification-text"><strong>Colet marcat automat!</strong><div>${result.awbCode} - ${result.destinatar}</div><small>${result.observatii || ''}</small></div></div>`;
     document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    setTimeout(() => { notification.classList.add('fade-out'); setTimeout(() => notification.remove(), 300); }, 3000);
 }
 
-// NOU: Încarcă datele disponibile pentru dropdown
 async function loadDateDisponibile() {
     try {
         const res = await fetch('/Depozit/GetDateDisponibile');
         const dates = await res.json();
-
         const select = document.getElementById('dateSelect');
         if (!select) return;
-
-        select.innerHTML = dates.map(d =>
-            `<option value="${d.value}" ${d.isToday ? 'selected' : ''}>${d.label}${d.isToday ? ' (Azi)' : ''}</option>`
-        ).join('');
-
-        // Setează data selectată
-        if (dates.length > 0) {
-            selectedDate = dates.find(d => d.isToday)?.value || dates[0].value;
-        }
-    } catch (e) {
-        console.error('Eroare la încărcarea datelor:', e);
-    }
+        select.innerHTML = dates.map(d => `<option value="${d.value}" ${d.isToday ? 'selected' : ''}>${d.label}${d.isToday ? ' (Azi)' : ''}</option>`).join('');
+        if (dates.length > 0) selectedDate = dates.find(d => d.isToday)?.value || dates[0].value;
+    } catch (e) { console.error('Eroare la încărcarea datelor:', e); }
 }
 
-// NOU: Încarcă coletele pregătite la data selectată
 async function loadColetePregatie(data = null) {
     try {
         const targetDate = data || selectedDate || '';
         const url = targetDate ? `/Depozit/GetColetePregatieLaData?data=${targetDate}` : '/Depozit/GetColetePregatieLaData';
-
         const res = await fetch(url);
         const result = await res.json();
-
         coletePregatie = result.colete || [];
         renderColetePregatie(result);
-
-        // Auto-deschide secțiunea dacă există cel puțin 1 colet pregătit
         if (coletePregatie.length > 0) {
             const section = document.getElementById('istoricSection');
             const btn = document.getElementById('toggleIstoricBtn');
@@ -335,30 +303,21 @@ async function loadColetePregatie(data = null) {
                 btn.textContent = '▼ Ascunde istoric';
             }
         }
-    } catch (e) {
-        console.error('Eroare la încărcarea coletelor pregătite:', e);
-    }
+    } catch (e) { console.error('Eroare la încărcarea coletelor pregătite:', e); }
 }
 
-// NOU: Handler pentru schimbarea datei
 function onDateChange(event) {
     selectedDate = event.target.value;
     loadColetePregatie(selectedDate);
 }
 
-// NOU: Render coletele pregătite
 function renderColetePregatie(result) {
     const container = document.getElementById('coletePregateList');
     const statsEl = document.getElementById('pregateStats');
-
     if (!container) return;
 
-    // Update stats
     if (statsEl) {
-        statsEl.innerHTML = `
-            <span class="stat-item">📦 ${result.total} colete</span>
-            <span class="stat-item">💰 ${result.totalRamburs.toFixed(2)} RON</span>
-        `;
+        statsEl.innerHTML = `<span class="stat-item">📦 ${result.total} colete</span><span class="stat-item">💰 ${result.totalRamburs.toFixed(2)} RON</span>`;
     }
 
     if (coletePregatie.length === 0) {
@@ -366,10 +325,16 @@ function renderColetePregatie(result) {
         return;
     }
 
-    container.innerHTML = coletePregatie.map(c => `
-        <div class="pregatie-item" id="pregatie-${c.id}">
+    container.innerHTML = coletePregatie.map(c => {
+        const courier = c.curier || detectCourierFromAwb(c.awbCode);
+        const themeClass = getCourierThemeClass(courier);
+        return `
+        <div class="pregatie-item ${themeClass}" id="pregatie-${c.id}">
             <div class="pregatie-header">
-                <span class="pregatie-awb">${c.awbCode}</span>
+                <span class="pregatie-awb">
+                    ${c.awbCode}
+                    <span class="courier-badge ${courier}">${getCourierLabel(courier)}</span>
+                </span>
                 <span class="pregatie-ora">${formatTime(c.pregatitLa)}</span>
             </div>
             <div class="pregatie-info">
@@ -381,7 +346,7 @@ function renderColetePregatie(result) {
                 <button class="btn-anuleaza" onclick="anuleazaPregatire(${c.id}, '${c.awbCode}')">↩️ Anulează</button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function formatTime(dateString) {
@@ -391,38 +356,17 @@ function formatTime(dateString) {
 
 function formatDate(dateString) {
     const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
-}
-
-function getCourierLabel(courier) {
-    const labels = {
-        'CARGUS': 'CARGUS',
-        'FAN': 'FAN',
-        'OLXFAN': 'OLX FAN'
-    };
-    return labels[courier] || courier;
-}
-
-function getCourierThemeClass(courier) {
-    switch (courier) {
-        case 'CARGUS': return 'theme-cargus';
-        case 'FAN': return 'theme-fan';
-        case 'OLXFAN': return 'theme-olxfan';
-        default: return '';
-    }
+    return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 }
 
 function render() {
     const total = currentFilter ? `${awbs.length} (din ${allAwbs.length} total)` : awbs.length;
     document.getElementById('count').textContent = `Total: ${total} AWB-uri`;
 
-    document.getElementById('list').innerHTML = awbs.map(a =>
-        `<div class="awb ${getCourierThemeClass(a.courier)}">
+    document.getElementById('list').innerHTML = awbs.map(a => {
+        const themeClass = getCourierThemeClass(a.courier);
+        return `
+        <div class="awb ${themeClass}">
             <div class="awb-header">
                 <div class="awb-info">
                     <span class="awb-code">
@@ -432,9 +376,12 @@ function render() {
                     </span>
                     ${a.coletInfo ? `
                         <div class="awb-colet-info">
-                            <span class="awb-destinatar">👤 ${a.coletInfo.destinatar || '-'}</span>
-                            <span class="awb-produse">${formatProductsWithIcons(a.coletInfo.observatii)}</span>
-                            <span class="awb-pret">💰 ${a.coletInfo.rambursRon || 0} RON</span>
+                            <div class="awb-destinatar">👤 ${a.coletInfo.destinatar || '-'}</div>
+                            <div class="awb-produse">${formatProductsWithIcons(a.coletInfo.observatii)}</div>
+                            <div class="awb-colet-details">
+                                <span class="awb-pret">💰 ${a.coletInfo.rambursRon || 0} RON</span>
+                                <span class="awb-greutate">⚖️ ${a.coletInfo.greutateKg || 0} kg</span>
+                            </div>
                         </div>
                     ` : ''}
                     <span class="awb-date">📅 ${formatDate(a.scannedAt)}</span>
@@ -446,16 +393,12 @@ function render() {
             </div>
             ${a.media && a.media.length > 0 ? `
                 <div class="awb-media-preview">
-                    ${a.media.slice(0, 4).map(m =>
-            m.mediaType === 'video'
-                ? `<video src="${m.filePath}" onclick="window.open('${m.filePath}')"></video>`
-                : `<img src="${m.filePath}" onclick="window.open('${m.filePath}')">`
-        ).join('')}
+                    ${a.media.slice(0, 4).map(m => m.mediaType === 'video' ? `<video src="${m.filePath}" onclick="window.open('${m.filePath}')"></video>` : `<img src="${m.filePath}" onclick="window.open('${m.filePath}')">`).join('')}
                     ${a.media.length > 4 ? `<span style="padding:20px">+${a.media.length - 4}</span>` : ''}
                 </div>
             ` : ''}
-        </div>`
-    ).join('');
+        </div>
+    `}).join('');
 }
 
 function openMediaModal(awbId, awbCode, mediaCount) {
@@ -464,242 +407,106 @@ function openMediaModal(awbId, awbCode, mediaCount) {
     document.getElementById('mediaCount').textContent = `${mediaCount}/10 fișiere încărcate`;
     document.getElementById('mediaModal').style.display = 'block';
     document.getElementById('uploadStatus').style.display = 'none';
-
-    // Blur pentru a preveni tastatura
     document.activeElement.blur();
 
     const awb = allAwbs.find(a => a.id === awbId);
     if (awb && awb.media && awb.media.length > 0) {
-        document.getElementById('existingMedia').innerHTML = `
-            <h4>Media existente:</h4>
-            ${awb.media.map(m => `
-                <div class="existing-media-item">
-                    ${m.mediaType === 'video'
-                ? `<video src="${m.filePath}" controls></video>`
-                : `<img src="${m.filePath}" onclick="window.open('${m.filePath}')">`
-            }
-                    <button class="delete-media" onclick="deleteMedia(${m.id})">✕</button>
-                </div>
-            `).join('')}
-        `;
+        document.getElementById('existingMedia').innerHTML = `<h4>Media existente:</h4>${awb.media.map(m => `<div class="existing-media-item">${m.mediaType === 'video' ? `<video src="${m.filePath}" controls></video>` : `<img src="${m.filePath}" onclick="window.open('${m.filePath}')">`}<button class="delete-media" onclick="deleteMedia(${m.id})">✕</button></div>`).join('')}`;
     } else {
         document.getElementById('existingMedia').innerHTML = '<p style="color:#666">Nicio poză sau video încă.</p>';
     }
 }
 
-function closeModal() {
-    document.getElementById('mediaModal').style.display = 'none';
-    currentAwbId = null;
-}
-
-function captureMedia(type) {
-    if (type === 'image') {
-        document.getElementById('cameraInput').click();
-    } else {
-        document.getElementById('videoInput').click();
-    }
-}
-
-function uploadFromGallery() {
-    document.getElementById('fileInput').click();
-}
-
-function showUploadStatus(type, message) {
-    const status = document.getElementById('uploadStatus');
-    status.className = type;
-    status.textContent = message;
-    status.style.display = 'block';
-}
+function closeModal() { document.getElementById('mediaModal').style.display = 'none'; currentAwbId = null; }
+function captureMedia(type) { document.getElementById(type === 'image' ? 'cameraInput' : 'videoInput').click(); }
+function uploadFromGallery() { document.getElementById('fileInput').click(); }
+function showUploadStatus(type, message) { const status = document.getElementById('uploadStatus'); status.className = type; status.textContent = message; status.style.display = 'block'; }
 
 async function handleFileSelect(event) {
     const files = event.target.files;
     if (!files.length) return;
-
     const awb = allAwbs.find(a => a.id === currentAwbId);
     const currentCount = awb ? awb.mediaCount : 0;
-
-    if (currentCount + files.length > 10) {
-        showUploadStatus('error', `Poți adăuga maxim ${10 - currentCount} fișiere. Ai selectat ${files.length}.`);
-        event.target.value = '';
-        return;
-    }
-
+    if (currentCount + files.length > 10) { showUploadStatus('error', `Poți adăuga maxim ${10 - currentCount} fișiere.`); event.target.value = ''; return; }
     showUploadStatus('loading', 'Se încarcă fișierele...');
-
     const formData = new FormData();
-    for (let file of files) {
-        formData.append('files', file);
-    }
-
+    for (let file of files) formData.append('files', file);
     try {
-        const res = await fetch(`/Depozit/UploadMedia?awbId=${currentAwbId}`, {
-            method: 'POST',
-            body: formData
-        });
-
+        const res = await fetch(`/Depozit/UploadMedia?awbId=${currentAwbId}`, { method: 'POST', body: formData });
         if (res.ok) {
             allAwbs = await res.json();
             lastCount = allAwbs.length;
-
-            if (currentFilter === '') {
-                awbs = [...allAwbs];
-            } else {
-                awbs = allAwbs.filter(a => a.courier === currentFilter);
-            }
+            awbs = currentFilter === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === currentFilter);
             render();
-
             const updatedAwb = allAwbs.find(a => a.id === currentAwbId);
-            if (updatedAwb) {
-                openMediaModal(currentAwbId, updatedAwb.code, updatedAwb.mediaCount);
-            }
-
+            if (updatedAwb) openMediaModal(currentAwbId, updatedAwb.code, updatedAwb.mediaCount);
             showUploadStatus('success', 'Fișiere încărcate cu succes!');
-        } else {
-            const errorText = await res.text();
-            showUploadStatus('error', `Eroare: ${errorText}`);
-        }
-    } catch (e) {
-        console.error('Eroare:', e);
-        showUploadStatus('error', `Eroare la încărcare: ${e.message}`);
-    }
-
+        } else { showUploadStatus('error', `Eroare: ${await res.text()}`); }
+    } catch (e) { showUploadStatus('error', `Eroare: ${e.message}`); }
     event.target.value = '';
 }
 
 async function deleteMedia(mediaId) {
     if (!confirm('Ștergi acest fișier?')) return;
-
     try {
-        const res = await fetch(`/Depozit/DeleteMedia?mediaId=${mediaId}`, {
-            method: 'POST'
-        });
-
+        const res = await fetch(`/Depozit/DeleteMedia?mediaId=${mediaId}`, { method: 'POST' });
         if (res.ok) {
             allAwbs = await res.json();
             lastCount = allAwbs.length;
-
-            if (currentFilter === '') {
-                awbs = [...allAwbs];
-            } else {
-                awbs = allAwbs.filter(a => a.courier === currentFilter);
-            }
+            awbs = currentFilter === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === currentFilter);
             render();
-
             const updatedAwb = allAwbs.find(a => a.id === currentAwbId);
-            if (updatedAwb) {
-                openMediaModal(currentAwbId, updatedAwb.code, updatedAwb.mediaCount);
-            }
+            if (updatedAwb) openMediaModal(currentAwbId, updatedAwb.code, updatedAwb.mediaCount);
         }
-    } catch (e) {
-        console.error('Eroare:', e);
-    }
+    } catch (e) { console.error('Eroare:', e); }
 }
 
-// MODIFICAT: Adaugă AWB cu verificare duplicate
 async function addAwb(code, courier) {
-    // Verifică local întâi pentru răspuns rapid
-    if (allAwbs.some(a => a.code === code)) {
-        showDuplicateWarning(code);
-        return;
-    }
-
-    // Mai întâi verifică și marchează automat dacă există în lista de pregătit
+    if (allAwbs.some(a => a.code === code)) { showDuplicateWarning(code); return; }
     await verificaSiMarcheazaAutomat(code);
-
-    // Apoi adaugă în lista de scanate
-    const res = await fetch('/Depozit/Add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, courier })
-    });
-
+    const res = await fetch('/Depozit/Add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, courier }) });
     const result = await res.json();
-
-    // Verifică dacă serverul a returnat eroare de duplicat
-    if (result.error) {
-        showDuplicateWarning(code);
-        return;
-    }
-
+    if (result.error) { showDuplicateWarning(code); return; }
     allAwbs = result;
     lastCount = allAwbs.length;
-
-    if (currentFilter === '') {
-        awbs = [...allAwbs];
-    } else {
-        awbs = allAwbs.filter(a => a.courier === currentFilter);
-    }
+    awbs = currentFilter === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === currentFilter);
     render();
-
-    // Refresh toate listele pentru sincronizare
     refreshAll();
 }
 
-// Funcție pentru afișare warning duplicate
 function showDuplicateWarning(code) {
     const notification = document.createElement('div');
     notification.className = 'duplicate-warning';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">⚠️</span>
-            <div class="notification-text">
-                <strong>AWB duplicat!</strong>
-                <div>${code} există deja în sistem</div>
-            </div>
-        </div>
-    `;
+    notification.innerHTML = `<div class="notification-content"><span class="notification-icon">⚠️</span><div class="notification-text"><strong>AWB duplicat!</strong><div>${code} există deja în sistem</div></div></div>`;
     document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    setTimeout(() => { notification.classList.add('fade-out'); setTimeout(() => notification.remove(), 300); }, 3000);
 }
 
 async function remove(code) {
-    if (!confirm(`Ștergi AWB ${code} și toate pozele asociate?\nDacă era pregătit, va reveni în lista de pregătit.`)) return;
-
-    const res = await fetch('/Depozit/Remove', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-    });
+    if (!confirm(`Ștergi AWB ${code}?`)) return;
+    const res = await fetch('/Depozit/Remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
     allAwbs = await res.json();
     lastCount = allAwbs.length;
-
-    if (currentFilter === '') {
-        awbs = [...allAwbs];
-    } else {
-        awbs = allAwbs.filter(a => a.courier === currentFilter);
-    }
+    awbs = currentFilter === '' ? [...allAwbs] : allAwbs.filter(a => a.courier === currentFilter);
     render();
-
-    // Refresh toate listele
     refreshAll();
 }
 
 async function clearAll() {
-    if (confirm('Ștergi toate AWB-urile și toate pozele?')) {
-        const res = await fetch('/Depozit/Clear', { method: 'POST' });
-        allAwbs = [];
-        awbs = [];
-        lastCount = 0;
-        render();
+    if (confirm('Ștergi toate AWB-urile?')) {
+        await fetch('/Depozit/Clear', { method: 'POST' });
+        allAwbs = []; awbs = []; lastCount = 0; render();
     }
 }
 
 function copyAll() {
-    const text = awbs.map(a => `${a.code} (${getCourierLabel(a.courier)})`).join('\n');
-    navigator.clipboard.writeText(text)
-        .then(() => alert('Lista copiată!'))
-        .catch(() => alert('Eroare la copiere'));
+    navigator.clipboard.writeText(awbs.map(a => `${a.code} (${getCourierLabel(a.courier)})`).join('\n'))
+        .then(() => alert('Lista copiată!')).catch(() => alert('Eroare'));
 }
 
-// Toggle secțiunea de istoric
 function toggleIstoricSection() {
     const section = document.getElementById('istoricSection');
     const btn = document.getElementById('toggleIstoricBtn');
-
     if (section.style.display === 'none') {
         section.style.display = 'block';
         btn.textContent = '▼ Ascunde istoric';
@@ -711,136 +518,68 @@ function toggleIstoricSection() {
     }
 }
 
-// NOU: Anulează pregătirea și revine la PENDING
 async function anuleazaPregatire(id, awbCode) {
-    if (!confirm(`Anulezi pregătirea coletului ${awbCode}?\nVa reveni în lista de pregătit.`)) return;
-
+    if (!confirm(`Anulezi pregătirea coletului ${awbCode}?`)) return;
     try {
         const res = await fetch(`/Depozit/RevineLaPending?id=${id}`, { method: 'POST' });
         if (res.ok) {
-            // Animație
             const el = document.getElementById(`pregatie-${id}`);
-            if (el) {
-                el.style.opacity = '0';
-                el.style.transform = 'translateX(-50px)';
-            }
-
-            // Refresh toate listele
+            if (el) { el.style.opacity = '0'; el.style.transform = 'translateX(-50px)'; }
             setTimeout(() => refreshAll(), 300);
         }
-    } catch (e) {
-        console.error('Eroare:', e);
-        alert('Eroare la anulare');
-    }
+    } catch (e) { console.error('Eroare:', e); alert('Eroare'); }
 }
 
-// Handler pentru input SCANARE (fără tastatură pe mobil)
 document.getElementById('scanInput').addEventListener('input', (e) => {
     const val = e.target.value.trim();
-    if (!val) return;
-
-    // Detectează dacă e un cod complet (de obicei scanerele trimit tot codul odată)
-    if (val.length >= 10) {
-        // Verificare locală pentru răspuns instant
-        if (allAwbs.some(a => a.code === val)) {
-            showDuplicateWarning(val);
-            e.target.value = '';
-            return;
-        }
-
-        const courier = isScanning && currentCourier ? currentCourier : 'CARGUS';
-        addAwb(val, courier);
+    if (val && val.length >= 10) {
+        if (allAwbs.some(a => a.code === val)) { showDuplicateWarning(val); e.target.value = ''; return; }
+        addAwb(val, isScanning && currentCourier ? currentCourier : 'CARGUS');
         e.target.value = '';
     }
 });
 
-// Handler pentru Enter pe input scanare
 document.getElementById('scanInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const val = e.target.value.trim();
         if (!val) return;
-
-        if (allAwbs.some(a => a.code === val)) {
-            showDuplicateWarning(val);
-            e.target.value = '';
-            return;
-        }
-
-        const courier = isScanning && currentCourier ? currentCourier : 'CARGUS';
-        addAwb(val, courier);
+        if (allAwbs.some(a => a.code === val)) { showDuplicateWarning(val); e.target.value = ''; return; }
+        addAwb(val, isScanning && currentCourier ? currentCourier : 'CARGUS');
         e.target.value = '';
     }
 });
 
-// Handler pentru input MANUAL
-document.getElementById('manualAwb').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        submitManualAwb();
+document.getElementById('scanInput').addEventListener('blur', () => {
+    if (isScanning) {
+        setTimeout(() => { const scanInput = document.getElementById('scanInput'); scanInput.setAttribute('inputmode', 'none'); scanInput.focus(); }, 100);
+    } else {
+        const scanInput = document.getElementById('scanInput');
+        scanInput.placeholder = 'Apasă Scanează';
+        scanInput.classList.remove('scanner-active');
     }
 });
+
+document.getElementById('manualAwb').addEventListener('keypress', (e) => { if (e.key === 'Enter') submitManualAwb(); });
 
 function submitManualAwb() {
     const input = document.getElementById('manualAwb');
     const val = input.value.trim();
     if (!val) return;
-
-    // Verificare locală pentru răspuns instant
-    if (allAwbs.some(a => a.code === val)) {
-        showDuplicateWarning(val);
-        input.value = '';
-        return;
-    }
-
-    const courier = document.getElementById('manualCourier').value;
-    addAwb(val, courier);
+    if (allAwbs.some(a => a.code === val)) { showDuplicateWarning(val); input.value = ''; return; }
+    addAwb(val, isScanning && currentCourier ? currentCourier : 'CARGUS');
     input.value = '';
     input.focus();
 }
 
-// Buton scanare - focus fără tastatură
-function focusScanInput() {
-    const scanInput = document.getElementById('scanInput');
-    scanInput.setAttribute('inputmode', 'none');
-    scanInput.focus();
-    scanInput.value = '';
-}
+window.onclick = function (event) { if (event.target === document.getElementById('mediaModal')) closeModal(); }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.colete-section.fullscreen-mode')) toggleFullscreen(); });
 
-document.getElementById('scanInput').addEventListener('blur', () => {
-    if (isScanning) {
-        setTimeout(() => {
-            const scanInput = document.getElementById('scanInput');
-            scanInput.setAttribute('inputmode', 'none');
-            scanInput.focus();
-        }, 100);
-    }
-});
-
-window.onclick = function (event) {
-    const modal = document.getElementById('mediaModal');
-    if (event.target === modal) {
-        closeModal();
-    }
-}
-
-// Escape key pentru ieșire din fullscreen
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        const section = document.querySelector('.colete-section');
-        if (section && section.classList.contains('fullscreen-mode')) {
-            toggleFullscreen();
-        }
-    }
-});
-
-// Inițializare
 async function init() {
     await loadAwbs();
     await loadColeteDePregatit();
     await loadDateDisponibile();
-    await loadColetePregatie(); // Va deschide automat secțiunea dacă există colete
+    await loadColetePregatie();
 }
 
 init();
-
-// Refresh periodic - toate cele 3 secțiuni la fiecare 3 secunde (mai rapid)
 setInterval(refreshAll, 3000);
